@@ -46,7 +46,7 @@
                             <div>
                                 <div class="flex items-center space-x-2">
                                     <span class="text-sm font-bold text-slate-900">{{ $customer_phone }}</span>
-                                    <span class="px-2 py-0.5 text-3xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">No. HP / WA</span>
+                                    <span class="px-2 py-0.5 text-3xs font-semibold rounded-full bg-emerald-600 text-white shadow-2xs">No. HP / WA</span>
                                 </div>
                                 <p class="text-xs text-slate-600 font-medium mt-0.5">{{ $customer_name }}</p>
                             </div>
