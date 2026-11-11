@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50 antialiased">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>{{ $title ?? config('app.name', 'SEMAPON') }}</title>
+
+    <!-- PWA / Mobile Theme Meta -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    @stack('meta')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+    @stack('styles')
+</head>
+<body class="h-full text-slate-800 font-sans selection:bg-primary-100 selection:text-primary-800">
+    {{ $slot }}
+
+    <x-toast />
+    <x-confirm-dialog />
+
+    @livewireScripts
+    @stack('scripts')
+</body>
+</html>

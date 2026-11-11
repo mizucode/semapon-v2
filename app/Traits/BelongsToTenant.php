@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Traits;
+
+use App\Models\Store;
+use App\Scopes\TenantScope;
+use App\Services\TenantContext;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+trait BelongsToTenant
+{
+    public static function bootBelongsToTenant(): void
+    {
+        static::addGlobalScope(new TenantScope);
+
+        static::creating(function ($model) {
+            if (empty($model->store_id)) {
+                $tenantContext = app(TenantContext::class);
+                $model->store_id = $tenantContext->getStoreId();
+            }
+        });
+    }
+
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class, 'store_id');
+    }
+
+    public function scopeWithoutTenant(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope(TenantScope::class);
+    }
+}
