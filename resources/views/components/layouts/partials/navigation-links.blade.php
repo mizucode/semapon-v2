@@ -57,11 +57,6 @@ $activeIconClass = 'w-5 h-5 mr-3 shrink-0 text-white';
 
         <div class="pt-3.5 pb-1 px-3 text-xs font-semibold text-slate-400">Operasional Servis</div>
 
-        <a href="{{ Route::has('customers.index') ? route('customers.index') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('customers.*') ? $activeClass : $inactiveClass }}">
-            <i data-lucide="users" class="{{ request()->routeIs('customers.*') ? $activeIconClass : $iconClass }}"></i>
-            <span>Pelanggan</span>
-        </a>
-
         <a href="{{ Route::has('orders.index') ? route('orders.index') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('orders.*') ? $activeClass : $inactiveClass }}">
             <i data-lucide="clipboard-list" class="{{ request()->routeIs('orders.*') ? $activeIconClass : $iconClass }}"></i>
             <span>Order Servis</span>
@@ -70,6 +65,11 @@ $activeIconClass = 'w-5 h-5 mr-3 shrink-0 text-white';
         <a href="{{ Route::has('services.index') ? route('services.index') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('services.*') ? $activeClass : $inactiveClass }}">
             <i data-lucide="sparkles" class="{{ request()->routeIs('services.*') ? $activeIconClass : $iconClass }}"></i>
             <span>Katalog Layanan</span>
+        </a>
+
+        <a href="{{ Route::has('customers.index') ? route('customers.index') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('customers.*') ? $activeClass : $inactiveClass }}">
+            <i data-lucide="users" class="{{ request()->routeIs('customers.*') ? $activeIconClass : $iconClass }}"></i>
+            <span>Pelanggan</span>
         </a>
 
         @if($role === 'owner')

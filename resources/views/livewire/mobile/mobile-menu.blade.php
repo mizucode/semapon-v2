@@ -61,20 +61,6 @@
                 </div>
             </a>
 
-            <!-- Pelanggan -->
-            <a href="{{ route('customers.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="users" class="w-5 h-5"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800">Pelanggan</p>
-                        <p class="text-2xs text-slate-500">Database pelanggan & riwayat servis</p>
-                    </div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-            </a>
-
             <!-- Katalog Layanan -->
             <a href="{{ route('services.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
                 <div class="flex items-center space-x-3 min-w-0">
@@ -84,6 +70,20 @@
                     <div class="min-w-0">
                         <p class="text-sm font-semibold text-slate-800">Katalog Layanan</p>
                         <p class="text-2xs text-slate-500">Tarif jasa perbaikan & estimasi durasi</p>
+                    </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </a>
+
+            <!-- Pelanggan -->
+            <a href="{{ route('customers.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-slate-800">Pelanggan</p>
+                        <p class="text-2xs text-slate-500">Database pelanggan & riwayat servis</p>
                     </div>
                 </div>
                 <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
