@@ -14,6 +14,43 @@
         </div>
     </div>
 
+    <!-- Alert Banners (if any) -->
+    @if($overdueOrdersCount > 0 || $lowStockCount > 0)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            @if($overdueOrdersCount > 0)
+                <div class="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-rose-600 text-white rounded-2xl shadow-xs">
+                    <div class="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <p class="text-xs font-medium leading-relaxed">
+                            Terdapat <strong>{{ $overdueOrdersCount }}</strong> order servis yang melewati estimasi selesai!
+                        </p>
+                    </div>
+                    <a href="{{ route('orders.index') }}" class="shrink-0 inline-flex items-center justify-center text-xs font-bold px-3 py-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-xl shadow-xs transition-colors whitespace-nowrap">
+                        Lihat
+                    </a>
+                </div>
+            @endif
+
+            @if($lowStockCount > 0)
+                <div class="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-amber-500 text-white rounded-2xl shadow-xs">
+                    <div class="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                            <i data-lucide="package-x" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <p class="text-xs font-medium leading-relaxed">
+                            Terdapat <strong>{{ $lowStockCount }}</strong> sparepart/produk dengan stok di bawah batas minimal!
+                        </p>
+                    </div>
+                    <a href="{{ route('inventory.index') }}" class="shrink-0 inline-flex items-center justify-center text-xs font-bold px-3 py-1.5 bg-white text-amber-600 hover:bg-amber-50 rounded-xl shadow-xs transition-colors whitespace-nowrap">
+                        Restock
+                    </a>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <!-- KPI Metric Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Active Services -->
@@ -64,43 +101,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Alert Banners (if any) -->
-    @if($overdueOrdersCount > 0 || $lowStockCount > 0)
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-            @if($overdueOrdersCount > 0)
-                <div class="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-rose-600 text-white rounded-2xl shadow-xs">
-                    <div class="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                            <i data-lucide="alert-triangle" class="w-4 h-4 text-white"></i>
-                        </div>
-                        <p class="text-xs font-medium leading-relaxed">
-                            Terdapat <strong>{{ $overdueOrdersCount }}</strong> order servis yang melewati estimasi selesai!
-                        </p>
-                    </div>
-                    <a href="{{ route('orders.index') }}" class="shrink-0 inline-flex items-center justify-center text-xs font-bold px-3 py-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-xl shadow-xs transition-colors whitespace-nowrap">
-                        Lihat
-                    </a>
-                </div>
-            @endif
-
-            @if($lowStockCount > 0)
-                <div class="flex items-center justify-between gap-3 p-3.5 sm:p-4 bg-amber-500 text-white rounded-2xl shadow-xs">
-                    <div class="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-                        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                            <i data-lucide="package-x" class="w-4 h-4 text-white"></i>
-                        </div>
-                        <p class="text-xs font-medium leading-relaxed">
-                            Terdapat <strong>{{ $lowStockCount }}</strong> sparepart/produk dengan stok di bawah batas minimal!
-                        </p>
-                    </div>
-                    <a href="{{ route('inventory.index') }}" class="shrink-0 inline-flex items-center justify-center text-xs font-bold px-3 py-1.5 bg-white text-amber-600 hover:bg-amber-50 rounded-xl shadow-xs transition-colors whitespace-nowrap">
-                        Restock
-                    </a>
-                </div>
-            @endif
-        </div>
-    @endif
 
     <!-- Content Grid: Recent Orders & Inventory Alert -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
