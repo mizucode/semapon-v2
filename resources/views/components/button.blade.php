@@ -8,7 +8,7 @@
 ])
 
 @php
-$baseClasses = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]';
+$baseClasses = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] cursor-pointer';
 
 $sizeClasses = [
     'sm' => 'px-3 py-1.5 text-xs gap-1.5 min-h-[34px]',

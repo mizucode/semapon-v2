@@ -21,14 +21,14 @@
                     <button
                         type="button"
                         wire:click="setCustomerMode('existing')"
-                        class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs transition-all {{ $customer_mode === 'existing' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-medium' }}"
+                        class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer {{ $customer_mode === 'existing' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-medium' }}"
                     >
                         Terdaftar
                     </button>
                     <button
                         type="button"
                         wire:click="setCustomerMode('new')"
-                        class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs transition-all {{ $customer_mode === 'new' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-medium' }}"
+                        class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer {{ $customer_mode === 'new' ? 'bg-white text-slate-900 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-medium' }}"
                     >
                         Pelanggan Baru
                     </button>
@@ -81,7 +81,7 @@
                                     <button
                                         type="button"
                                         wire:click="selectCustomer('{{ $match->id }}')"
-                                        class="w-full flex items-center justify-between p-3 hover:bg-slate-50 text-left transition-colors"
+                                        class="w-full flex items-center justify-between p-3 hover:bg-slate-50 text-left transition-colors cursor-pointer"
                                     >
                                         <div>
                                             <span class="text-xs font-bold text-slate-900 block">{{ $match->phone }}</span>
@@ -99,7 +99,7 @@
                                 <button
                                     type="button"
                                     wire:click="setCustomerMode('new')"
-                                    class="font-bold underline text-amber-900 hover:opacity-80 ml-2 shrink-0"
+                                    class="font-bold underline text-amber-900 hover:opacity-80 ml-2 shrink-0 cursor-pointer"
                                 >
                                     + Daftarkan Sebagai Pelanggan Baru
                                 </button>
@@ -118,7 +118,7 @@
                             <button
                                 type="button"
                                 wire:click="selectCustomer('{{ $duplicateCustomer->id }}')"
-                                class="px-3 py-1 rounded-xl bg-blue-600 text-white font-semibold text-2xs hover:bg-blue-700 shadow-xs shrink-0 ml-3"
+                                class="px-3 py-1 rounded-xl bg-blue-600 text-white font-semibold text-2xs hover:bg-blue-700 shadow-xs shrink-0 ml-3 cursor-pointer"
                             >
                                 Gunakan Pelanggan Ini
                             </button>

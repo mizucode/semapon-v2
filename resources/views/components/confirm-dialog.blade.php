@@ -84,13 +84,13 @@
                 <button
                     type="button"
                     @click="cancel()"
-                    class="inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-xs ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:w-auto transition-colors"
+                    class="inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-xs ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:w-auto transition-colors cursor-pointer"
                     x-text="cancelText"
                 ></button>
                 <button
                     type="button"
                     @click="confirm()"
-                    class="inline-flex w-full justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-xs sm:w-auto transition-colors"
+                    class="inline-flex w-full justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-xs sm:w-auto transition-colors cursor-pointer"
                     :class="confirmVariant === 'danger' ? 'bg-rose-600 hover:bg-rose-500 focus-visible:outline-rose-600' : 'bg-blue-600 hover:bg-blue-500 focus-visible:outline-blue-600'"
                     x-text="confirmText"
                 ></button>
