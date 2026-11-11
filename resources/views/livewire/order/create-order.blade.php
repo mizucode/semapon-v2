@@ -408,7 +408,7 @@
                     @if($is_cost_undetermined)
                         <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 flex items-center justify-between transition-all">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-amber-100/80 flex items-center justify-center text-amber-700 shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
                                     <i data-lucide="help-circle" class="w-4 h-4"></i>
                                 </div>
                                 <div>
@@ -416,7 +416,7 @@
                                     <span class="text-[11px] text-slate-600 block mt-0.5">Biaya awal diset Rp0. Teknisi akan membongkar unit dan konfirmasi biaya ke pelanggan via WhatsApp.</span>
                                 </div>
                             </div>
-                            <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-2xs font-bold uppercase tracking-wider shrink-0 border border-amber-200/60">
+                            <span class="px-2.5 py-0.5 rounded-md bg-amber-500 text-white text-2xs font-bold uppercase tracking-wider shrink-0 shadow-2xs">
                                 Pending
                             </span>
                         </div>
@@ -447,7 +447,7 @@
                     @if($is_completion_undetermined)
                         <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 flex items-center justify-between transition-all">
                             <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-amber-100/80 flex items-center justify-center text-amber-700 shrink-0">
+                                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
                                     <i data-lucide="clock" class="w-4 h-4"></i>
                                 </div>
                                 <div>
@@ -455,7 +455,7 @@
                                     <span class="text-[11px] text-slate-600 block mt-0.5">Jadwal penyelesaian unit akan disepakati bersama pelanggan setelah kerusakan teridentifikasi.</span>
                                 </div>
                             </div>
-                            <span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-2xs font-bold uppercase tracking-wider shrink-0 border border-amber-200/60">
+                            <span class="px-2.5 py-0.5 rounded-md bg-amber-500 text-white text-2xs font-bold uppercase tracking-wider shrink-0 shadow-2xs">
                                 Pending
                             </span>
                         </div>
