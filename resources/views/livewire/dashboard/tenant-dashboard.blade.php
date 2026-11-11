@@ -207,11 +207,11 @@
             <div class="pt-4 border-t border-slate-100 space-y-2">
                 <p class="text-xs font-bold text-slate-700">Akses Cepat</p>
                 <div class="grid grid-cols-2 gap-2 text-xs">
-                    <a href="{{ route('purchases.index') }}" class="p-2.5 rounded-xl border border-slate-200 hover:border-primary-500 hover:text-primary-600 text-slate-600 font-medium flex items-center gap-2 transition-colors">
+                    <a href="{{ route('purchases.index') }}" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 transition-colors">
                         <i data-lucide="truck" class="w-4 h-4 text-slate-400"></i>
                         <span>Pembelian</span>
                     </a>
-                    <a href="{{ route('reports.index') }}" class="p-2.5 rounded-xl border border-slate-200 hover:border-primary-500 hover:text-primary-600 text-slate-600 font-medium flex items-center gap-2 transition-colors">
+                    <a href="{{ route('reports.index') }}" class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 transition-colors">
                         <i data-lucide="bar-chart-2" class="w-4 h-4 text-slate-400"></i>
                         <span>Laporan</span>
                     </a>
