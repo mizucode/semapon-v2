@@ -276,7 +276,7 @@
                                 <div class="flex items-center justify-end space-x-1">
                                     <a
                                         href="{{ route('orders.show', $order->id) }}"
-                                        class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors shadow-2xs"
+                                        class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors shadow-xs"
                                         title="Buka Lembar Kerja & Update Status"
                                     >
                                         <span>Kelola</span>
