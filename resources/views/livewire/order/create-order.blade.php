@@ -49,6 +49,12 @@
                                     <span class="px-2 py-0.5 text-3xs font-semibold rounded-full bg-emerald-600 text-white shadow-2xs">No. HP / WA</span>
                                 </div>
                                 <p class="text-xs text-slate-600 font-medium mt-0.5">{{ $customer_name }}</p>
+                                @if($customer_address)
+                                    <p class="text-2xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                        <i data-lucide="map-pin" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                                        <span>{{ $customer_address }}</span>
+                                    </p>
+                                @endif
                             </div>
                         </div>
                         <button
@@ -199,6 +205,19 @@
                                 class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
                             >
                             @error('customer_name') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- 3. Alamat Pelanggan -->
+                        <div class="sm:col-span-2">
+                            <label for="c_address" class="block text-sm font-semibold text-slate-800 mb-2">Alamat Pelanggan (Opsional)</label>
+                            <textarea
+                                wire:model="customer_address"
+                                id="c_address"
+                                rows="2"
+                                placeholder="Contoh: Jl. Diponegoro No. 15, RT 03/RW 02..."
+                                class="block w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                            ></textarea>
+                            @error('customer_address') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
@@ -377,6 +396,84 @@
                         <option value="Patah / Rusak">Patah / Rusak</option>
                     </select>
                 </div>
+            </div>
+
+            <!-- Upload Foto Kondisi Unit -->
+            <div class="mt-6 pt-5 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-800">Foto Kondisi Fisik Unit (Opsional)</label>
+                        <p class="text-xs text-slate-400 mt-0.5">Dokumentasi fisik perangkat saat diterima (lecet, retak, atau kondisi segel).</p>
+                    </div>
+                    @if(count($device_photos) > 0)
+                        <span class="text-xs font-semibold text-primary-600 bg-primary-50 px-2.5 py-1 rounded-lg">
+                            {{ count($device_photos) }} foto dipilih
+                        </span>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    <!-- Tombol Kamera (Ambil Foto Langsung) -->
+                    <label for="camera_upload_input" class="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary-500 hover:bg-primary-50/40 transition-all cursor-pointer group bg-slate-50/50 min-h-[110px]">
+                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
+                            <i data-lucide="camera" class="w-5 h-5 text-slate-500 group-hover:text-primary-600 transition-colors"></i>
+                        </div>
+                        <span class="mt-2 text-xs font-medium text-slate-700 group-hover:text-primary-700">Foto</span>
+                        <input
+                            type="file"
+                            id="camera_upload_input"
+                            wire:model="camera_photo"
+                            accept="image/*"
+                            capture="environment"
+                            class="sr-only"
+                        >
+                    </label>
+
+                    <!-- Tombol Galeri (Pilih dari File/Galeri) -->
+                    <label for="gallery_upload_input" class="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary-500 hover:bg-primary-50/40 transition-all cursor-pointer group bg-slate-50/50 min-h-[110px]">
+                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform">
+                            <i data-lucide="upload" class="w-5 h-5 text-slate-500 group-hover:text-primary-600 transition-colors"></i>
+                        </div>
+                        <span class="mt-2 text-xs font-medium text-slate-700 group-hover:text-primary-700">Galeri</span>
+                        <input
+                            type="file"
+                            id="gallery_upload_input"
+                            wire:model="gallery_photos"
+                            accept="image/*"
+                            multiple
+                            class="sr-only"
+                        >
+                    </label>
+
+                    <!-- Thumbnail List of Selected Photos -->
+                    @foreach($device_photos as $index => $photo)
+                        <div class="relative group/thumb rounded-xl overflow-hidden border border-slate-200 bg-slate-100 min-h-[110px] flex items-center justify-center">
+                            <img src="{{ $photo->temporaryUrl() }}" alt="Kondisi HP" class="w-full h-[110px] object-cover">
+                            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                                <button
+                                    type="button"
+                                    wire:click="removeDevicePhoto({{ $index }})"
+                                    class="p-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 shadow-xs cursor-pointer transition-transform hover:scale-110"
+                                    title="Hapus Foto"
+                                >
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Loading indicator saat upload -->
+                <div wire:loading wire:target="camera_photo, gallery_photos" class="mt-2.5 text-xs text-primary-600 flex items-center gap-2">
+                    <svg class="animate-spin h-3.5 w-3.5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span>Mengunggah foto perangkat...</span>
+                </div>
+
+                @error('camera_photo') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                @error('gallery_photos.*') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
             </div>
         </x-card>
 

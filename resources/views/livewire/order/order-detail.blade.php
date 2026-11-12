@@ -295,6 +295,20 @@
                             </div>
                         </div>
                     @endif
+
+                    <!-- Foto Kondisi Fisik Unit Saat Diterima -->
+                    @if (is_array($order->photos) && count($order->photos) > 0)
+                        <div class="pt-3 border-t border-slate-100">
+                            <span class="text-slate-400 block text-2xs uppercase mb-2 font-semibold">Foto Fisik Unit ({{ count($order->photos) }})</span>
+                            <div class="grid grid-cols-3 gap-2">
+                                @foreach ($order->photos as $photo)
+                                    <a href="{{ asset('storage/'.$photo) }}" target="_blank" class="block rounded-xl overflow-hidden border border-slate-200 aspect-square group bg-slate-50 relative">
+                                        <img src="{{ asset('storage/'.$photo) }}" alt="Foto Fisik Unit" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 

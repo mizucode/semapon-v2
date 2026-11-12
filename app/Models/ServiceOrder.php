@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'status',
     'complaints',
     'physical_condition',
+    'photos',
     'accessories_included',
     'passcode',
     'is_cost_undetermined',
@@ -43,6 +44,7 @@ class ServiceOrder extends Model
     {
         return [
             'physical_condition' => 'array',
+            'photos' => 'array',
             'is_cost_undetermined' => 'boolean',
             'estimated_cost' => 'decimal:2',
             'total_cost' => 'decimal:2',

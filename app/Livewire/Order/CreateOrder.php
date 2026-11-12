@@ -11,10 +11,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app', ['title' => 'Terima Servis Baru', 'breadcrumbs' => [['label' => 'Order', 'url' => '/orders'], ['label' => 'Penerimaan Servis']]])]
 class CreateOrder extends Component
 {
+    use WithFileUploads;
+
+    // Photos
+    public $camera_photo;
+
+    public $gallery_photos = [];
+
+    public array $device_photos = [];
+
     // Customer Selection / Creation
     public ?string $customer_id = null;
 
@@ -206,6 +217,38 @@ class CreateOrder extends Component
         $this->passcode = $device->passcode ?? '';
     }
 
+    public function updatedCameraPhoto(): void
+    {
+        $this->validate([
+            'camera_photo' => 'image|max:10240',
+        ]);
+
+        if ($this->camera_photo) {
+            $this->device_photos[] = $this->camera_photo;
+            $this->camera_photo = null;
+        }
+    }
+
+    public function updatedGalleryPhotos(): void
+    {
+        $this->validate([
+            'gallery_photos.*' => 'image|max:10240',
+        ]);
+
+        foreach ($this->gallery_photos as $photo) {
+            $this->device_photos[] = $photo;
+        }
+        $this->gallery_photos = [];
+    }
+
+    public function removeDevicePhoto(int $index): void
+    {
+        if (isset($this->device_photos[$index])) {
+            unset($this->device_photos[$index]);
+            $this->device_photos = array_values($this->device_photos);
+        }
+    }
+
     public function switchToNewCustomer(): void
     {
         $this->reset(['customer_id', 'customer_name', 'customer_phone', 'customer_email', 'customer_address', 'customer_device_id', 'device_brand', 'device_model', 'device_color', 'device_variant', 'device_specs', 'device_imei', 'passcode']);
@@ -281,6 +324,9 @@ class CreateOrder extends Component
                 ]);
             } else {
                 $customer = Customer::findOrFail($this->customer_id);
+                if ($this->customer_address && ! $customer->address) {
+                    $customer->update(['address' => $this->customer_address]);
+                }
             }
 
             // 2. Resolve or Create Device
@@ -306,6 +352,15 @@ class CreateOrder extends Component
                 }
             }
 
+            // Process & Store Photos
+            $storedPhotos = [];
+            foreach ($this->device_photos as $photo) {
+                if ($photo instanceof TemporaryUploadedFile) {
+                    $path = $photo->store('orders/'.$store->id, 'public');
+                    $storedPhotos[] = $path;
+                }
+            }
+
             // 3. Create Service Order
             $paymentStatus = 'unpaid';
             if ($this->down_payment > 0) {
@@ -321,6 +376,7 @@ class CreateOrder extends Component
                 'status' => 'received',
                 'complaints' => $this->complaints,
                 'physical_condition' => $this->physical_condition,
+                'photos' => $storedPhotos,
                 'accessories_included' => $this->accessories_included,
                 'passcode' => $this->passcode ?: $device->passcode,
                 'is_cost_undetermined' => $this->is_cost_undetermined,

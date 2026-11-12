@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Services\TenantContext;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -94,6 +96,37 @@ test('user can create a service order via intake form', function () {
     expect($order)->not->toBeNull();
     expect($order->order_number)->toStartWith('ORD-');
     expect(strlen($order->tracking_token))->toBe(64);
+});
+
+test('user can create a service order with customer address and photos', function () {
+    Storage::fake('public');
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $file = UploadedFile::fake()->image('hp_retak.jpg');
+
+    Livewire::test(CreateOrder::class)
+        ->set('customer_mode', 'new')
+        ->set('customer_phone', '089988776655')
+        ->set('customer_name', 'Doni Salman')
+        ->set('customer_address', 'Jl. Merdeka No. 99, Bandung')
+        ->set('device_brand', 'Samsung')
+        ->set('device_model', 'Galaxy S23')
+        ->set('complaints', 'Kaca kamera retak')
+        ->set('camera_photo', $file)
+        ->call('storeOrder')
+        ->assertHasNoErrors()
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('customers', [
+        'name' => 'Doni Salman',
+        'address' => 'Jl. Merdeka No. 99, Bandung',
+    ]);
+
+    $order = ServiceOrder::whereHas('customer', fn ($q) => $q->where('name', 'Doni Salman'))->first();
+    expect($order)->not->toBeNull();
+    expect($order->photos)->toBeArray()->toHaveCount(1);
+    Storage::disk('public')->assertExists($order->photos[0]);
 });
 
 test('user can advance service order status and log history', function () {
