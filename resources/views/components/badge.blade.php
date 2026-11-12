@@ -7,41 +7,44 @@
 @php
 $colorMap = [
     // Service order database statuses
-    'received' => 'bg-blue-50 text-blue-700 border-blue-200',
-    'diagnosing' => 'bg-purple-50 text-purple-700 border-purple-200',
-    'waiting_approval' => 'bg-amber-50 text-amber-700 border-amber-200',
-    'in_progress' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    'waiting_parts' => 'bg-orange-50 text-orange-700 border-orange-200',
-    'testing' => 'bg-purple-50 text-purple-700 border-purple-200',
-    'ready_for_pickup' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'picked_up' => 'bg-slate-100 text-slate-700 border-slate-200',
-    'cancelled' => 'bg-rose-50 text-rose-700 border-rose-200',
-    'unrepairable' => 'bg-rose-50 text-rose-700 border-rose-200',
-    'pending' => 'bg-amber-50 text-amber-800 border-amber-200',
+    'received' => 'bg-blue-600 text-white shadow-xs',
+    'diagnosing' => 'bg-purple-600 text-white shadow-xs',
+    'waiting_approval' => 'bg-amber-500 text-white shadow-xs',
+    'in_progress' => 'bg-indigo-600 text-white shadow-xs',
+    'waiting_parts' => 'bg-orange-500 text-white shadow-xs',
+    'testing' => 'bg-violet-600 text-white shadow-xs',
+    'ready_for_pickup' => 'bg-sky-500 text-white shadow-xs',
+    'completed' => 'bg-emerald-500 text-white shadow-xs',
+    'picked_up' => 'bg-slate-700 text-white shadow-xs',
+    'cancelled' => 'bg-rose-500 text-white shadow-xs',
+    'unrepairable' => 'bg-rose-600 text-white shadow-xs',
+    'pending' => 'bg-amber-500 text-white shadow-xs',
 
     // Indonesian aliases
-    'masuk' => 'bg-blue-50 text-blue-700 border-blue-200',
-    'antrean' => 'bg-amber-50 text-amber-700 border-amber-200',
-    'diagnosa' => 'bg-purple-50 text-purple-700 border-purple-200',
-    'konfirmasi_biaya' => 'bg-amber-50 text-amber-700 border-amber-200',
-    'proses_servis' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    'selesai' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'diambil' => 'bg-slate-100 text-slate-700 border-slate-200',
-    'dibatalkan' => 'bg-rose-50 text-rose-700 border-rose-200',
-    'garansi' => 'bg-yellow-50 text-yellow-800 border-yellow-200',
+    'masuk' => 'bg-blue-600 text-white shadow-xs',
+    'antrean' => 'bg-amber-500 text-white shadow-xs',
+    'diagnosa' => 'bg-purple-600 text-white shadow-xs',
+    'konfirmasi_biaya' => 'bg-amber-500 text-white shadow-xs',
+    'proses_servis' => 'bg-indigo-600 text-white shadow-xs',
+    'selesai' => 'bg-emerald-500 text-white shadow-xs',
+    'diambil' => 'bg-slate-700 text-white shadow-xs',
+    'dibatalkan' => 'bg-rose-500 text-white shadow-xs',
+    'garansi' => 'bg-amber-500 text-white shadow-xs',
 
     // Payment statuses
-    'unpaid' => 'bg-rose-50 text-rose-700 border-rose-200',
-    'partially_paid' => 'bg-amber-50 text-amber-700 border-amber-200',
-    'paid' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'unpaid' => 'bg-rose-500 text-white shadow-xs',
+    'partially_paid' => 'bg-amber-500 text-white shadow-xs',
+    'paid' => 'bg-emerald-500 text-white shadow-xs',
 
-    // Variants
-    'success' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'danger' => 'bg-rose-50 text-rose-700 border-rose-200',
-    'warning' => 'bg-amber-50 text-amber-700 border-amber-200',
-    'info' => 'bg-blue-50 text-blue-700 border-blue-200',
-    'slate' => 'bg-slate-100 text-slate-700 border-slate-200',
+    // Variants (matching design guide: Primary, Success, Error, Warning, Info, Gray)
+    'primary' => 'bg-blue-600 text-white shadow-xs',
+    'success' => 'bg-emerald-500 text-white shadow-xs',
+    'error' => 'bg-rose-500 text-white shadow-xs',
+    'danger' => 'bg-rose-500 text-white shadow-xs',
+    'warning' => 'bg-amber-500 text-white shadow-xs',
+    'info' => 'bg-sky-500 text-white shadow-xs',
+    'gray' => 'bg-slate-700 text-white shadow-xs',
+    'slate' => 'bg-slate-700 text-white shadow-xs',
 ];
 
 $labelMap = [
@@ -85,12 +88,12 @@ $labelMap = [
 ];
 
 $key = $variant ?? $status;
-$colorClasses = $colorMap[$key] ?? 'bg-slate-100 text-slate-700 border-slate-200';
-$sizeClasses = $size === 'sm' ? 'px-2 py-0.5 text-2xs' : 'px-2.5 py-1 text-xs';
+$colorClasses = $colorMap[$key] ?? 'bg-slate-700 text-white shadow-xs';
+$sizeClasses = $size === 'sm' ? 'px-2.5 py-0.5 text-2xs' : 'px-3 py-1 text-xs';
 $displayText = $slot->isNotEmpty() ? $slot : ($labelMap[$status] ?? ucfirst(str_replace('_', ' ', $status ?? '')));
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center font-medium rounded-full border {$sizeClasses} {$colorClasses} whitespace-nowrap transition-colors"]) }}>
+<span {{ $attributes->merge(['class' => "inline-flex items-center font-semibold rounded-full {$sizeClasses} {$colorClasses} whitespace-nowrap transition-colors"]) }}>
     {{ $displayText }}
 </span>
 

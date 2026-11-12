@@ -8,51 +8,23 @@
                 </h1>
 
                 <!-- Status Badge -->
-                @php
-                    $statusClasses = [
-                        'received' => 'bg-slate-100 text-slate-700 border-slate-200',
-                        'diagnosing' => 'bg-blue-50 text-blue-700 border-blue-200',
-                        'waiting_approval' => 'bg-amber-50 text-amber-700 border-amber-200',
-                        'in_progress' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                        'waiting_parts' => 'bg-orange-50 text-orange-700 border-orange-200',
-                        'testing' => 'bg-purple-50 text-purple-700 border-purple-200',
-                        'ready_for_pickup' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                        'completed' => 'bg-green-100 text-green-800 border-green-300',
-                        'cancelled' => 'bg-rose-50 text-rose-700 border-rose-200',
-                        'unrepairable' => 'bg-red-50 text-red-700 border-red-200',
-                    ];
-                    $statusLabels = [
-                        'received' => 'Diterima',
-                        'diagnosing' => 'Diagnosa',
-                        'waiting_approval' => 'Tunggu Konfirmasi',
-                        'in_progress' => 'Sedang Dikerjakan',
-                        'waiting_parts' => 'Menunggu Sparepart',
-                        'testing' => 'Pengujian (QC)',
-                        'ready_for_pickup' => 'Siap Diambil',
-                        'completed' => 'Selesai & Diambil',
-                        'cancelled' => 'Dibatalkan',
-                        'unrepairable' => 'Gagal / Tidak Bisa',
-                    ];
-                @endphp
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border {{ $statusClasses[$order->status] ?? 'bg-slate-100 text-slate-700' }}">
-                    {{ $statusLabels[$order->status] ?? ucfirst($order->status) }}
-                </span>
+                <x-badge :status="$order->status" />
 
                 <!-- Payment Status Badge -->
                 @if ($order->is_cost_undetermined && $order->items->isEmpty())
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-500 text-white shadow-xs">
                         MENUNGGU DIAGNOSA
                     </span>
                 @elseif ($order->payment_status === 'paid')
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500 text-white shadow-xs">
                         LUNAS
                     </span>
                 @elseif ($order->payment_status === 'partially_paid')
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-500 text-white shadow-xs">
                         DP TERCATAT
                     </span>
                 @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-500 text-white shadow-xs">
                         BELUM BAYAR
                     </span>
                 @endif
