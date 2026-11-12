@@ -82,10 +82,15 @@
                         $statusLabels = [
                             '' => 'Semua Status',
                             'active_queue' => 'Antrean & Pengerjaan',
-                            'received' => 'Unit Masuk',
+                            'received' => 'Diterima',
+                            'diagnosing' => 'Diagnosa',
+                            'waiting_approval' => 'Tunggu Konfirmasi',
                             'in_progress' => 'Dalam Pengerjaan',
+                            'waiting_parts' => 'Menunggu Sparepart',
+                            'testing' => 'Pengujian (QC)',
                             'ready_for_pickup' => 'Siap Diambil',
-                            'picked_up' => 'Sudah Diambil',
+                            'completed' => 'Selesai',
+                            'unrepairable' => 'Tidak Bisa Diperbaiki',
                             'cancelled' => 'Dibatalkan',
                         ];
                         $currentStatusLabel = $statusLabels[$statusFilter] ?? 'Semua Status';

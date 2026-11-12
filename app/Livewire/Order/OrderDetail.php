@@ -76,10 +76,23 @@ class OrderDetail extends Component
         $this->order->updateStatus($newStatus, $notes, Auth::id());
         $this->order->refresh();
 
+        $statusLabels = [
+            'received' => 'Diterima',
+            'diagnosing' => 'Diagnosa',
+            'waiting_approval' => 'Tunggu Konfirmasi',
+            'in_progress' => 'Sedang Dikerjakan',
+            'waiting_parts' => 'Menunggu Sparepart',
+            'testing' => 'Pengujian (QC)',
+            'ready_for_pickup' => 'Siap Diambil',
+            'completed' => 'Selesai & Diambil',
+            'cancelled' => 'Dibatalkan',
+            'unrepairable' => 'Tidak Bisa Diperbaiki',
+        ];
+
         $this->dispatch('toast', [
             'type' => 'success',
             'title' => 'Status Diperbarui',
-            'message' => 'Status order kini: '.ucfirst(str_replace('_', ' ', $newStatus)),
+            'message' => 'Status order kini: '.($statusLabels[$newStatus] ?? ucfirst(str_replace('_', ' ', $newStatus))),
         ]);
     }
 

@@ -142,17 +142,7 @@
                                     {{ $order->device?->brand }} {{ $order->device?->model }}
                                 </td>
                                 <td class="py-3 px-3">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-semibold
-                                        @if($order->status === 'completed') bg-emerald-50 text-emerald-700
-                                        @elseif($order->status === 'ready_for_pickup') bg-blue-50 text-blue-700
-                                        @elseif($order->status === 'in_progress') bg-indigo-50 text-indigo-700
-                                        @elseif($order->status === 'waiting_parts') bg-amber-50 text-amber-700
-                                        @elseif($order->status === 'cancelled') bg-rose-50 text-rose-700
-                                        @else bg-slate-100 text-slate-700
-                                        @endif
-                                    ">
-                                        {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                                    </span>
+                                    <x-badge :status="$order->status" size="sm" />
                                 </td>
                                 <td class="py-3 px-3 text-right">
                                     <a href="{{ route('orders.show', $order->id) }}" class="inline-flex items-center p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">

@@ -544,7 +544,7 @@
                                     {{ $history->user?->name ?? 'Sistem' }}
                                     @if ($history->from_status !== $history->to_status)
                                         <span class="text-2xs font-normal text-slate-500">
-                                            ({{ ucfirst(str_replace('_', ' ', $history->from_status)) }} → {{ ucfirst(str_replace('_', ' ', $history->to_status)) }})
+                                            ({{ $statusLabels[$history->from_status] ?? ucfirst(str_replace('_', ' ', $history->from_status)) }} → {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }})
                                         </span>
                                     @endif
                                 </span>
