@@ -8,10 +8,10 @@
         <div>
             <a
                 href="{{ route('orders.create') }}"
-                class="inline-flex shrink-0 items-center justify-center h-9 px-4 py-2 gap-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-all active:translate-y-px cursor-pointer"
+                class="inline-flex shrink-0 items-center justify-center h-10 px-5 py-2.5 gap-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-all active:translate-y-px cursor-pointer"
             >
-                <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                <span>Terima Servis Baru</span>
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Tambah Servis</span>
             </a>
         </div>
     </div>
@@ -205,7 +205,7 @@
             icon="clipboard-list"
             title="Tidak ada order ditemukan"
             description="Tidak ada order servis HP yang sesuai dengan filter atau kata kunci Anda."
-            actionLabel="Terima Servis Baru"
+            actionLabel="Tambah Servis"
             actionUrl="{{ route('orders.create') }}"
         />
     @else
