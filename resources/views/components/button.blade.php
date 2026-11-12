@@ -8,13 +8,13 @@
 ])
 
 @php
-$baseClasses = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] cursor-pointer';
+$baseClasses = 'inline-flex shrink-0 items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none active:translate-y-px cursor-pointer';
 
 $sizeClasses = [
-    'sm' => 'px-3 py-1.5 text-xs gap-1.5 min-h-[34px]',
-    'md' => 'px-4 py-2.5 text-sm gap-2 min-h-[42px]',
-    'lg' => 'px-5 py-3 text-base gap-2.5 min-h-[48px]',
-][$size] ?? 'px-4 py-2.5 text-sm gap-2 min-h-[42px]';
+    'sm' => 'h-8 px-3 text-xs gap-1.5',
+    'md' => 'h-9 px-4 py-2 text-sm gap-1.5',
+    'lg' => 'h-10 px-5 py-2.5 text-base gap-2',
+][$size] ?? 'h-9 px-4 py-2 text-sm gap-1.5';
 
 $variantClasses = [
     'primary' => 'bg-primary-600 hover:bg-primary-700 text-white shadow-xs focus:ring-2 focus:ring-primary-500/30',

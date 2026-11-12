@@ -17,14 +17,14 @@
     @if($actionLabel)
         <div class="mt-5">
             @if($actionUrl)
-                <a href="{{ $actionUrl }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl shadow-xs transition-all cursor-pointer">
-                    <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
-                    {{ $actionLabel }}
+                <a href="{{ $actionUrl }}" class="inline-flex shrink-0 items-center justify-center h-9 px-4 py-2 gap-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-all active:translate-y-px cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>{{ $actionLabel }}</span>
                 </a>
             @elseif($actionClick)
-                <button type="button" @click="{{ $actionClick }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl shadow-xs transition-all cursor-pointer">
-                    <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
-                    {{ $actionLabel }}
+                <button type="button" @click="{{ $actionClick }}" class="inline-flex shrink-0 items-center justify-center h-9 px-4 py-2 gap-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-all active:translate-y-px cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>{{ $actionLabel }}</span>
                 </button>
             @endif
         </div>

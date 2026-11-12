@@ -8,10 +8,10 @@
         <div>
             <a
                 href="{{ route('orders.create') }}"
-                class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl shadow-xs transition-all cursor-pointer"
+                class="inline-flex shrink-0 items-center justify-center h-9 px-4 py-2 gap-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-all active:translate-y-px cursor-pointer"
             >
-                <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>
-                Terima Servis Baru
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Terima Servis Baru</span>
             </a>
         </div>
     </div>
@@ -278,14 +278,14 @@
                                 @endif
                             </td>
                             <td class="py-3 px-5 text-right whitespace-nowrap">
-                                <div class="flex items-center justify-end space-x-1">
+                                <div class="flex items-center justify-end">
                                     <a
                                         href="{{ route('orders.show', $order->id) }}"
-                                        class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all shadow-xs cursor-pointer"
+                                        class="inline-flex shrink-0 items-center justify-center h-8 px-3 gap-1 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all active:translate-y-px shadow-xs cursor-pointer"
                                         title="Buka Lembar Kerja & Update Status"
                                     >
                                         <span>Kelola</span>
-                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 ml-1"></i>
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                                     </a>
                                 </div>
                             </td>
@@ -324,10 +324,10 @@
                         </div>
                         <a
                             href="{{ route('orders.show', $order->id) }}"
-                            class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all cursor-pointer shadow-xs"
+                            class="inline-flex shrink-0 items-center justify-center h-8 px-3 gap-1 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all active:translate-y-px cursor-pointer shadow-xs"
                         >
                             <span>Buka Order</span>
-                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                         </a>
                     </div>
                 </div>
