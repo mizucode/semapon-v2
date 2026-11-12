@@ -20,31 +20,22 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
             <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Sedang Dalam Proses / Antrean</span>
-            <div class="flex items-center justify-between mt-1">
+            <div class="mt-1">
                 <span class="text-2xl font-bold text-amber-600">{{ $stats['total_active'] }} Unit</span>
-                <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <i data-lucide="clock" class="w-4 h-4"></i>
-                </span>
             </div>
         </div>
 
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
             <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Selesai (Siap Diambil)</span>
-            <div class="flex items-center justify-between mt-1">
+            <div class="mt-1">
                 <span class="text-2xl font-bold text-emerald-600">{{ $stats['waiting_pickup'] }} Unit</span>
-                <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <i data-lucide="bell-ring" class="w-4 h-4"></i>
-                </span>
             </div>
         </div>
 
         <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
             <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Sudah Diambil Hari Ini</span>
-            <div class="flex items-center justify-between mt-1">
+            <div class="mt-1">
                 <span class="text-2xl font-bold text-slate-800">{{ $stats['completed_today'] }} Unit</span>
-                <span class="w-8 h-8 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center">
-                    <i data-lucide="check-check" class="w-4 h-4"></i>
-                </span>
             </div>
         </div>
     </div>
