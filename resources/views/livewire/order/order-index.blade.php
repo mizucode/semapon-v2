@@ -281,7 +281,7 @@
                                 <div class="flex items-center justify-end space-x-1">
                                     <a
                                         href="{{ route('orders.show', $order->id) }}"
-                                        class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all shadow-xs cursor-pointer"
+                                        class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all shadow-xs cursor-pointer"
                                         title="Buka Lembar Kerja & Update Status"
                                     >
                                         <span>Kelola</span>
@@ -324,7 +324,7 @@
                         </div>
                         <a
                             href="{{ route('orders.show', $order->id) }}"
-                            class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all cursor-pointer shadow-xs"
+                            class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all cursor-pointer shadow-xs"
                         >
                             <span>Buka Order</span>
                             <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
