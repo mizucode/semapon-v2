@@ -17,12 +17,12 @@
     @if($actionLabel)
         <div class="mt-5">
             @if($actionUrl)
-                <a href="{{ $actionUrl }}" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-500 rounded-xl shadow-xs transition-colors">
+                <a href="{{ $actionUrl }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl shadow-xs transition-all cursor-pointer">
                     <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
                     {{ $actionLabel }}
                 </a>
             @elseif($actionClick)
-                <button type="button" @click="{{ $actionClick }}" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-500 rounded-xl shadow-xs transition-colors">
+                <button type="button" @click="{{ $actionClick }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl shadow-xs transition-all cursor-pointer">
                     <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
                     {{ $actionLabel }}
                 </button>

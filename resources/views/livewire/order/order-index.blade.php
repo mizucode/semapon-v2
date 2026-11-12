@@ -8,9 +8,9 @@
         <div>
             <a
                 href="{{ route('orders.create') }}"
-                class="inline-flex items-center px-4 py-2.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-xs transition-colors"
+                class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl shadow-xs transition-all cursor-pointer"
             >
-                <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i>
+                <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i>
                 Terima Servis Baru
             </a>
         </div>
@@ -276,7 +276,7 @@
                                 <div class="flex items-center justify-end space-x-1">
                                     <a
                                         href="{{ route('orders.show', $order->id) }}"
-                                        class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors shadow-xs"
+                                        class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all shadow-xs cursor-pointer"
                                         title="Buka Lembar Kerja & Update Status"
                                     >
                                         <span>Kelola</span>
@@ -319,9 +319,10 @@
                         </div>
                         <a
                             href="{{ route('orders.show', $order->id) }}"
-                            class="px-3 py-1.5 text-xs font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors"
+                            class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all cursor-pointer shadow-xs"
                         >
-                            Buka Order &rarr;
+                            <span>Buka Order</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
                         </a>
                     </div>
                 </div>
