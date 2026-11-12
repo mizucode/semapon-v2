@@ -21,7 +21,7 @@ class MobileMenu extends Component
         $user = Auth::user();
 
         $activeOrdersCount = ServiceOrder::whereIn('status', [
-            'pending', 'diagnosed', 'waiting_approval', 'approved', 'in_progress', 'waiting_parts',
+            'received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending',
         ])->count();
 
         $lowStockCount = Product::where('is_active', true)

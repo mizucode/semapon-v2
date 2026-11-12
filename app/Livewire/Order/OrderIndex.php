@@ -56,7 +56,7 @@ class OrderIndex extends Component
             })
             ->when($this->statusFilter, function ($query) {
                 if ($this->statusFilter === 'active_queue') {
-                    $query->whereIn('status', ['received', 'checking', 'waiting_approval', 'waiting_parts', 'in_progress', 'testing']);
+                    $query->whereIn('status', ['received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending']);
                 } else {
                     $query->where('status', $this->statusFilter);
                 }
@@ -66,9 +66,9 @@ class OrderIndex extends Component
             ->paginate(12);
 
         $stats = [
-            'total_active' => ServiceOrder::whereIn('status', ['received', 'checking', 'waiting_approval', 'waiting_parts', 'in_progress', 'testing'])->count(),
+            'total_active' => ServiceOrder::whereIn('status', ['received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending'])->count(),
             'waiting_pickup' => ServiceOrder::where('status', 'ready_for_pickup')->count(),
-            'completed_today' => ServiceOrder::where('status', 'picked_up')->whereDate('picked_up_at', today())->count(),
+            'completed_today' => ServiceOrder::where('status', 'completed')->whereDate('completed_at', today())->count(),
         ];
 
         return view('livewire.order.order-index', [

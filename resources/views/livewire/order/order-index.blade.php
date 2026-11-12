@@ -83,6 +83,7 @@
                             'completed' => 'Selesai',
                             'unrepairable' => 'Tidak Bisa Diperbaiki',
                             'cancelled' => 'Dibatalkan',
+                            'pending' => 'Menunggu',
                         ];
                         $currentStatusLabel = $statusLabels[$statusFilter] ?? 'Semua Status';
                     @endphp
@@ -91,10 +92,26 @@
                         type="button"
                         @click="open = !open"
                         @click.outside="open = false"
-                        class="w-full lg:w-52 flex items-center justify-between px-4 py-3 rounded-xl border {{ $statusFilter !== '' ? 'border-primary-500 bg-primary-50/50 text-primary-700 font-semibold' : 'border-slate-200 bg-white text-slate-700 font-medium hover:border-slate-300' }} text-sm shadow-2xs transition-all"
+                        class="w-full lg:w-56 flex items-center justify-between px-3.5 py-2.5 rounded-lg border {{ $statusFilter !== '' ? 'border-primary-500 bg-primary-50/50 text-primary-700 font-semibold' : 'border-slate-200 bg-white text-slate-700 font-medium hover:border-slate-300' }} text-xs shadow-2xs transition-all cursor-pointer"
                     >
                         <div class="flex items-center space-x-2 truncate">
-                            <i data-lucide="activity" class="w-3.5 h-3.5 {{ $statusFilter !== '' ? 'text-primary-600' : 'text-slate-400' }} shrink-0"></i>
+                            @if($statusFilter && $statusFilter !== 'active_queue')
+                                <span class="w-2 h-2 rounded-full shrink-0 {{ 
+                                    $statusFilter === 'received' ? 'bg-blue-600' :
+                                    ($statusFilter === 'diagnosing' ? 'bg-purple-600' :
+                                    ($statusFilter === 'waiting_approval' ? 'bg-amber-500' :
+                                    ($statusFilter === 'in_progress' ? 'bg-indigo-600' :
+                                    ($statusFilter === 'waiting_parts' ? 'bg-orange-500' :
+                                    ($statusFilter === 'testing' ? 'bg-violet-600' :
+                                    ($statusFilter === 'ready_for_pickup' ? 'bg-sky-500' :
+                                    ($statusFilter === 'completed' ? 'bg-emerald-500' :
+                                    ($statusFilter === 'unrepairable' ? 'bg-rose-600' :
+                                    ($statusFilter === 'cancelled' ? 'bg-rose-500' :
+                                    ($statusFilter === 'pending' ? 'bg-amber-500' : 'bg-slate-400'))))))))))
+                                }}"></span>
+                            @else
+                                <i data-lucide="activity" class="w-3.5 h-3.5 {{ $statusFilter !== '' ? 'text-primary-600' : 'text-slate-400' }} shrink-0"></i>
+                            @endif
                             <span class="truncate">{{ $currentStatusLabel }}</span>
                         </div>
                         <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
@@ -109,22 +126,43 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="transform opacity-100 scale-100"
                         x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute left-0 lg:right-0 lg:left-auto mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40"
+                        class="absolute left-0 lg:right-0 lg:left-auto mt-1.5 w-60 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-40 max-h-[480px] overflow-y-auto"
                     >
                         <div class="px-3.5 py-1.5 text-3xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                             Pilih Status
                         </div>
-                        <div class="py-1 max-h-64 overflow-y-auto no-scrollbar">
+                        <div class="py-1">
                             @foreach($statusLabels as $value => $label)
                                 <button
                                     type="button"
                                     wire:click="$set('statusFilter', '{{ $value }}')"
                                     @click="open = false"
-                                    class="w-full flex items-center justify-between px-3.5 py-2 text-xs text-left transition-colors {{ $statusFilter === (string)$value ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}"
+                                    class="w-full flex items-center justify-between px-3.5 py-2 text-xs text-left transition-colors cursor-pointer {{ $statusFilter === (string)$value ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}"
                                 >
-                                    <span>{{ $label }}</span>
+                                    <div class="flex items-center space-x-2 truncate">
+                                        @if($value && $value !== 'active_queue')
+                                            <span class="w-2 h-2 rounded-full shrink-0 {{ 
+                                                $value === 'received' ? 'bg-blue-600' :
+                                                ($value === 'diagnosing' ? 'bg-purple-600' :
+                                                ($value === 'waiting_approval' ? 'bg-amber-500' :
+                                                ($value === 'in_progress' ? 'bg-indigo-600' :
+                                                ($value === 'waiting_parts' ? 'bg-orange-500' :
+                                                ($value === 'testing' ? 'bg-violet-600' :
+                                                ($value === 'ready_for_pickup' ? 'bg-sky-500' :
+                                                ($value === 'completed' ? 'bg-emerald-500' :
+                                                ($value === 'unrepairable' ? 'bg-rose-600' :
+                                                ($value === 'cancelled' ? 'bg-rose-500' :
+                                                ($value === 'pending' ? 'bg-amber-500' : 'bg-slate-400'))))))))))
+                                            }}"></span>
+                                        @elseif($value === 'active_queue')
+                                            <span class="w-2 h-2 rounded-full shrink-0 bg-primary-600"></span>
+                                        @else
+                                            <span class="w-2 h-2 rounded-full shrink-0 bg-transparent"></span>
+                                        @endif
+                                        <span class="truncate">{{ $label }}</span>
+                                    </div>
                                     @if($statusFilter === (string)$value)
-                                        <i data-lucide="check" class="w-3.5 h-3.5 text-primary-600"></i>
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-primary-600 shrink-0"></i>
                                     @endif
                                 </button>
                             @endforeach

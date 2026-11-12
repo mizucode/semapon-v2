@@ -21,7 +21,7 @@ class TenantDashboard extends Component
         $today = Carbon::today();
 
         $activeOrdersCount = ServiceOrder::whereIn('status', [
-            'pending', 'diagnosed', 'waiting_approval', 'approved', 'in_progress', 'waiting_parts',
+            'received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending',
         ])->count();
 
         $readyOrdersCount = ServiceOrder::where('status', 'ready_for_pickup')->count();
