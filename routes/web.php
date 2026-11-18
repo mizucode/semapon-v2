@@ -23,6 +23,7 @@ use App\Livewire\Service\ServiceCatalog;
 use App\Livewire\Store\CreateStore;
 use App\Livewire\Store\StoreSettings;
 use App\Livewire\Subscription\SubscriptionManager;
+use App\Livewire\SuperAdmin\DeviceCatalogManager;
 use App\Livewire\SuperAdmin\SuperAdminDashboard;
 use App\Livewire\Supplier\SupplierIndex;
 use App\Livewire\Technician\TechnicianIndex;
@@ -69,6 +70,7 @@ Route::middleware('auth')->group(function () {
     // Super Admin Platform Routes (No tenant scope required)
     Route::middleware('role:super_admin')->prefix('superadmin')->name('superadmin.')->group(function () {
         Route::get('/dashboard', SuperAdminDashboard::class)->name('dashboard');
+        Route::get('/devices', DeviceCatalogManager::class)->name('devices');
     });
 
     // Tenant Scoped Routes

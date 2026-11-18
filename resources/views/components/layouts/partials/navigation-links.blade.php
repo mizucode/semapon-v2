@@ -4,7 +4,7 @@
 ])
 
 @php
-$navItemClass = 'flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl transition-colors group ';
+$navItemClass = 'flex items-center px-3.5 py-2.5 text-sm font-medium rounded-lg transition-colors group ';
 $activeClass = 'bg-primary-600 text-white font-semibold shadow-xs';
 $inactiveClass = 'text-slate-600 hover:text-slate-900 hover:bg-slate-50';
 $iconClass = 'w-5 h-5 mr-3 shrink-0 text-slate-400 group-hover:text-slate-600 transition-colors';
@@ -17,6 +17,10 @@ $activeIconClass = 'w-5 h-5 mr-3 shrink-0 text-white';
         <a href="{{ Route::has('superadmin.dashboard') ? route('superadmin.dashboard') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('superadmin.dashboard') ? $activeClass : $inactiveClass }}">
             <i data-lucide="layout-dashboard" class="{{ request()->routeIs('superadmin.dashboard') ? $activeIconClass : $iconClass }}"></i>
             <span>Overview Platform</span>
+        </a>
+        <a href="{{ Route::has('superadmin.devices') ? route('superadmin.devices') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('superadmin.devices*') ? $activeClass : $inactiveClass }}">
+            <i data-lucide="smartphone" class="{{ request()->routeIs('superadmin.devices*') ? $activeIconClass : $iconClass }}"></i>
+            <span>Katalog Perangkat</span>
         </a>
         <a href="#" class="{{ $navItemClass }} {{ request()->routeIs('superadmin.tenants*') ? $activeClass : $inactiveClass }}">
             <i data-lucide="building-2" class="{{ request()->routeIs('superadmin.tenants*') ? $activeIconClass : $iconClass }}"></i>

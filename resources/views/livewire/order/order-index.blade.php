@@ -3,41 +3,23 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Antrean & Riwayat Order Servis</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Pantau progres reparasi smartphone, antrean teknisi, dan status pembayaran.</p>
         </div>
         <div>
-            <a
+            <x-button
                 href="{{ route('orders.create') }}"
-                class="inline-flex shrink-0 items-center justify-center h-10 px-5 py-2.5 gap-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-all active:translate-y-px cursor-pointer"
+                icon="plus"
             >
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Tambah Servis</span>
-            </a>
+                Tambah Servis
+            </x-button>
         </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-            <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Sedang Dalam Proses / Antrean</span>
-            <div class="mt-1">
-                <span class="text-2xl font-bold text-amber-600">{{ $stats['total_active'] }} Unit</span>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-            <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Selesai (Siap Diambil)</span>
-            <div class="mt-1">
-                <span class="text-2xl font-bold text-emerald-600">{{ $stats['waiting_pickup'] }} Unit</span>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-            <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Sudah Diambil Hari Ini</span>
-            <div class="mt-1">
-                <span class="text-2xl font-bold text-slate-800">{{ $stats['completed_today'] }} Unit</span>
-            </div>
-        </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <x-stat-card label="Antrean & Proses" :value="$stats['total_active']" />
+        <x-stat-card label="Siap Diambil" :value="$stats['waiting_pickup']" />
+        <x-stat-card label="Selesai Hari Ini" :value="$stats['completed_today']" />
+        <x-stat-card label="Servis Bulan Ini" :value="$stats['total_month']" />
     </div>
 
     <!-- Filters & Search Bar -->
@@ -92,11 +74,11 @@
                         type="button"
                         @click="open = !open"
                         @click.outside="open = false"
-                        class="w-full lg:w-56 flex items-center justify-between px-3.5 py-2.5 rounded-lg border {{ $statusFilter !== '' ? 'border-primary-500 bg-primary-50/50 text-primary-700 font-semibold' : 'border-slate-200 bg-white text-slate-700 font-medium hover:border-slate-300' }} text-xs shadow-2xs transition-all cursor-pointer"
+                        class="w-full lg:w-56 flex items-center justify-between px-4 py-3 rounded-xl border {{ $statusFilter !== '' ? 'border-primary-500 bg-primary-50/50 text-primary-700 font-semibold' : 'border-slate-200 bg-white text-slate-700 font-medium hover:border-slate-300' }} text-sm shadow-2xs transition-all cursor-pointer"
                     >
                         <div class="flex items-center space-x-2 truncate">
                             @if($statusFilter && $statusFilter !== 'active_queue')
-                                <span class="w-2 h-2 rounded-full shrink-0 {{ 
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ 
                                     $statusFilter === 'received' ? 'bg-blue-600' :
                                     ($statusFilter === 'diagnosing' ? 'bg-purple-600' :
                                     ($statusFilter === 'waiting_approval' ? 'bg-amber-500' :
@@ -110,11 +92,11 @@
                                     ($statusFilter === 'pending' ? 'bg-amber-500' : 'bg-slate-400'))))))))))
                                 }}"></span>
                             @else
-                                <i data-lucide="activity" class="w-3.5 h-3.5 {{ $statusFilter !== '' ? 'text-primary-600' : 'text-slate-400' }} shrink-0"></i>
+                                <i data-lucide="activity" class="w-4 h-4 {{ $statusFilter !== '' ? 'text-primary-600' : 'text-slate-400' }} shrink-0"></i>
                             @endif
                             <span class="truncate">{{ $currentStatusLabel }}</span>
                         </div>
-                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 ml-1.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
                     </button>
 
                     <div
@@ -181,13 +163,13 @@
                         type="button"
                         @click="open = !open"
                         @click.outside="open = false"
-                        class="w-full lg:w-52 flex items-center justify-between px-4 py-3 rounded-xl border {{ $technicianFilter !== '' ? 'border-primary-500 bg-primary-50/50 text-primary-700 font-semibold' : 'border-slate-200 bg-white text-slate-700 font-medium hover:border-slate-300' }} text-sm shadow-2xs transition-all"
+                        class="w-full lg:w-56 flex items-center justify-between px-4 py-3 rounded-xl border {{ $technicianFilter !== '' ? 'border-primary-500 bg-primary-50/50 text-primary-700 font-semibold' : 'border-slate-200 bg-white text-slate-700 font-medium hover:border-slate-300' }} text-sm shadow-2xs transition-all cursor-pointer"
                     >
                         <div class="flex items-center space-x-2 truncate">
-                            <i data-lucide="user" class="w-3.5 h-3.5 {{ $technicianFilter !== '' ? 'text-primary-600' : 'text-slate-400' }} shrink-0"></i>
+                            <i data-lucide="user" class="w-4 h-4 {{ $technicianFilter !== '' ? 'text-primary-600' : 'text-slate-400' }} shrink-0"></i>
                             <span class="truncate">{{ $currentTechLabel }}</span>
                         </div>
-                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 ml-1.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
                     </button>
 
                     <div

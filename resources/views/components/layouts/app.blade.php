@@ -43,7 +43,7 @@
             <!-- Drawer Header -->
             <div class="h-16 flex items-center justify-between px-5 border-b border-slate-100">
                 <div class="flex items-center space-x-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-xs">
+                    <div class="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center text-white shadow-xs">
                         <i data-lucide="smartphone" class="w-5 h-5"></i>
                     </div>
                     <span class="font-bold text-lg text-slate-900 tracking-tight">SEMAPON</span>
@@ -93,7 +93,7 @@
         <aside class="hidden lg:flex lg:flex-col lg:w-72 lg:shrink-0 bg-white border-r border-slate-200/80 lg:h-screen lg:sticky lg:top-0">
             <!-- Sidebar Header / Brand -->
             <div class="h-16 shrink-0 flex items-center px-6 border-b border-slate-100 space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-xs">
+                <div class="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center text-white shadow-xs">
                     <i data-lucide="smartphone" class="w-5 h-5"></i>
                 </div>
                 <span class="font-bold text-lg text-slate-900 tracking-tight">SEMAPON</span>
@@ -106,7 +106,7 @@
 
             <!-- Sidebar Footer / Store Switcher & Account -->
             <div class="p-4 shrink-0 border-t border-slate-100">
-                <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/70 flex items-center space-x-3">
+                <div class="bg-slate-50 rounded-lg p-3 border border-slate-200/70 flex items-center space-x-3">
                     <div class="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
                         <i data-lucide="store" class="w-4 h-4"></i>
                     </div>

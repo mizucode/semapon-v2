@@ -4,14 +4,16 @@ namespace App\Livewire\Order;
 
 use App\Models\Customer;
 use App\Models\CustomerDevice;
+use App\Models\DeviceCatalog;
 use App\Models\ServiceOrder;
 use App\Models\TechnicianProfile;
+use App\Services\ImageOptimizer;
 use App\Services\TenantContext;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app', ['title' => 'Terima Servis Baru', 'breadcrumbs' => [['label' => 'Order', 'url' => '/orders'], ['label' => 'Penerimaan Servis']]])]
@@ -45,6 +47,16 @@ class CreateOrder extends Component
 
     // Device Selection / Creation
     public ?string $customer_device_id = null;
+
+    public ?string $selected_catalog_id = null;
+
+    public string $device_catalog_search = '';
+
+    public bool $show_catalog_dropdown = false;
+
+    public array $suggested_colors = [];
+
+    public array $suggested_variants = [];
 
     public string $device_brand = '';
 
@@ -143,6 +155,11 @@ class CreateOrder extends Component
         }
     }
 
+    public function updatedCustomerMode(string $value): void
+    {
+        $this->setCustomerMode($value);
+    }
+
     public function updatedIsNewCustomer(bool $value): void
     {
         $this->customer_mode = $value ? 'new' : 'existing';
@@ -217,6 +234,43 @@ class CreateOrder extends Component
         $this->passcode = $device->passcode ?? '';
     }
 
+    public function updatedDeviceCatalogSearch(): void
+    {
+        $this->show_catalog_dropdown = true;
+    }
+
+    public function selectCatalogDevice(string $catalogId): void
+    {
+        $catalog = DeviceCatalog::findOrFail($catalogId);
+        $this->selected_catalog_id = $catalog->id;
+        $this->device_brand = $catalog->brand;
+        $this->device_model = $catalog->model_name;
+        $this->device_specs = $catalog->specs_summary ?? ($catalog->chipset ? 'Chipset: '.$catalog->chipset : '');
+        $this->suggested_colors = $catalog->default_colors ?? [];
+        $this->suggested_variants = $catalog->default_variants ?? [];
+        $this->device_catalog_search = "{$catalog->brand} {$catalog->model_name}";
+        $this->show_catalog_dropdown = false;
+    }
+
+    public function pickSuggestedColor(string $color): void
+    {
+        $this->device_color = $color;
+    }
+
+    public function pickSuggestedVariant(string $variant): void
+    {
+        $this->device_variant = $variant;
+    }
+
+    public function clearCatalogSelection(): void
+    {
+        $this->selected_catalog_id = null;
+        $this->device_catalog_search = '';
+        $this->suggested_colors = [];
+        $this->suggested_variants = [];
+        $this->show_catalog_dropdown = false;
+    }
+
     public function updatedCameraPhoto(): void
     {
         $this->validate([
@@ -283,12 +337,19 @@ class CreateOrder extends Component
             $this->customer_phone = self::normalizePhoneNumber($this->customer_phone);
             $rules['customer_name'] = ['required', 'string', 'max:255'];
             $rules['customer_phone'] = ['required', 'string', 'regex:/^08[0-9]{8,14}$/'];
+        }
+
+        if (! $this->customer_device_id) {
             $rules['device_brand'] = ['required', 'string', 'max:60'];
             $rules['device_model'] = ['required', 'string', 'max:100'];
+            $rules['device_imei'] = ['required', 'string', 'max:50'];
         }
 
         $this->validate($rules, [
             'customer_phone.regex' => 'Format nomor WhatsApp / HP harus diawali 08 dan terdiri dari 10-16 digit angka.',
+            'device_imei.required' => 'Nomor IMEI / SN unit wajib diisi.',
+            'device_brand.required' => 'Merek / Brand smartphone wajib diisi.',
+            'device_model.required' => 'Model / Tipe HP wajib diisi.',
         ]);
 
         $store = $tenantContext->getStore();
@@ -352,11 +413,11 @@ class CreateOrder extends Component
                 }
             }
 
-            // Process & Store Photos
+            // Process & Store Photos with automatic compression & resizing
             $storedPhotos = [];
             foreach ($this->device_photos as $photo) {
-                if ($photo instanceof TemporaryUploadedFile) {
-                    $path = $photo->store('orders/'.$store->id, 'public');
+                if ($photo instanceof UploadedFile) {
+                    $path = ImageOptimizer::optimizeAndStore($photo, 'orders/'.$store->id, 'public');
                     $storedPhotos[] = $path;
                 }
             }
@@ -439,6 +500,25 @@ class CreateOrder extends Component
             $duplicateCustomer = Customer::where('phone', $this->customer_phone)->first();
         }
 
+        $storeId = $tenantContext->getStoreId();
+        $allCatalogDevices = DeviceCatalog::availableFor($storeId)
+            ->select(['id', 'brand', 'model_name', 'series', 'specs_summary', 'chipset', 'is_verified', 'default_colors', 'default_variants'])
+            ->orderBy('is_verified', 'desc')
+            ->orderBy('brand')
+            ->orderBy('model_name')
+            ->get();
+
+        $catalogSuggestions = collect();
+        if (strlen(trim($this->device_catalog_search)) >= 2) {
+            $query = trim($this->device_catalog_search);
+            $catalogSuggestions = $allCatalogDevices->filter(function ($item) use ($query) {
+                return str_contains(strtolower($item->model_name), strtolower($query))
+                    || str_contains(strtolower($item->brand), strtolower($query))
+                    || str_contains(strtolower($item->series ?? ''), strtolower($query))
+                    || str_contains(strtolower($item->chipset ?? ''), strtolower($query));
+            })->take(8)->values();
+        }
+
         $existingCustomers = Customer::with('devices')->latest()->take(8)->get();
         $recentCustomers = $existingCustomers->take(5);
         $technicians = TechnicianProfile::with('user')->whereHas('membership', fn ($q) => $q->where('status', 'active'))->get();
@@ -449,6 +529,8 @@ class CreateOrder extends Component
             'matchingCustomers' => $matchingCustomers,
             'duplicateCustomer' => $duplicateCustomer,
             'technicians' => $technicians,
+            'catalogSuggestions' => $catalogSuggestions,
+            'allCatalogDevices' => $allCatalogDevices,
         ]);
     }
 }

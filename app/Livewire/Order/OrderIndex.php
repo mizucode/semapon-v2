@@ -65,10 +65,26 @@ class OrderIndex extends Component
             ->latest()
             ->paginate(12);
 
+        $now = now();
+        $thisMonthCount = ServiceOrder::whereMonth('created_at', $now->month)->whereYear('created_at', $now->year)->count();
+        $lastMonthCount = ServiceOrder::whereMonth('created_at', $now->copy()->subMonth()->month)->whereYear('created_at', $now->copy()->subMonth()->year)->count();
+        $monthGrowth = $lastMonthCount > 0
+            ? round((($thisMonthCount - $lastMonthCount) / $lastMonthCount) * 100, 1)
+            : ($thisMonthCount > 0 ? 100 : 0);
+
+        $completedToday = ServiceOrder::where('status', 'completed')->whereDate('completed_at', today())->count();
+        $completedYesterday = ServiceOrder::where('status', 'completed')->whereDate('completed_at', today()->subDay())->count();
+        $completedGrowth = $completedYesterday > 0
+            ? round((($completedToday - $completedYesterday) / $completedYesterday) * 100, 1)
+            : ($completedToday > 0 ? 100 : 0);
+
         $stats = [
             'total_active' => ServiceOrder::whereIn('status', ['received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending'])->count(),
             'waiting_pickup' => ServiceOrder::where('status', 'ready_for_pickup')->count(),
-            'completed_today' => ServiceOrder::where('status', 'completed')->whereDate('completed_at', today())->count(),
+            'completed_today' => $completedToday,
+            'completed_growth' => $completedGrowth,
+            'total_month' => $thisMonthCount,
+            'month_growth' => $monthGrowth,
         ];
 
         return view('livewire.order.order-index', [

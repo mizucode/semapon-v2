@@ -127,4 +127,15 @@ Before relying on a package's API, confirm its installed version:
 - Rerun a test after each change to it.
 - Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 
+=== ui rules ===
+
+# UI & Icons
+
+- Untuk semua status loading, spinner, dan indikator proses asynchronous (Livewire `wire:loading`, Alpine.js upload/progress, tombol submit, dll.), WAJIB menggunakan icon Lucide `loader-circle` (https://lucide.dev/icons/loader-circle) dengan animasi putar Tailwind `animate-spin`.
+- Format implementasi standar:
+  - Menggunakan tag Lucide icon: `<i data-lucide="loader-circle" class="animate-spin ..."></i>`
+  - Atau inline SVG Lucide `loader-circle`: `<svg class="animate-spin ..." xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
+  - Atau komponen Blade: `<x-loading />` dan `<x-button :loading="$target" />`.
+- DILARANG menggunakan icon spinner non-standar, icon generic lain, atau CSS border spinner bulat polos tanpa loader-circle.
+
 </laravel-boost-guidelines>

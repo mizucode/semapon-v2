@@ -112,6 +112,7 @@ test('user can create a service order with customer address and photos', functio
         ->set('customer_address', 'Jl. Merdeka No. 99, Bandung')
         ->set('device_brand', 'Samsung')
         ->set('device_model', 'Galaxy S23')
+        ->set('device_imei', '861234567890123')
         ->set('complaints', 'Kaca kamera retak')
         ->set('camera_photo', $file)
         ->call('storeOrder')
@@ -287,6 +288,7 @@ test('user can create a service order with new customer and normalized phone', f
         ->set('customer_phone', '+6281298765432')
         ->set('device_brand', 'Samsung')
         ->set('device_model', 'Galaxy A54')
+        ->set('device_imei', '861234567890124')
         ->set('complaints', 'Ganti baterai')
         ->set('estimated_cost', 300000)
         ->set('down_payment', 100000)
@@ -368,4 +370,20 @@ test('user can submit order with thousands separator dots in cost and down payme
         'down_payment' => 50000,
         'paid_amount' => 50000,
     ]);
+});
+
+test('device imei is required when creating a service order with new device', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    Livewire::test(CreateOrder::class)
+        ->set('customer_mode', 'new')
+        ->set('customer_name', 'Budi Test')
+        ->set('customer_phone', '081234567890')
+        ->set('device_brand', 'Xiaomi')
+        ->set('device_model', 'Redmi Note 13')
+        ->set('device_imei', '')
+        ->set('complaints', 'Bootloop')
+        ->call('storeOrder')
+        ->assertHasErrors(['device_imei' => 'required']);
 });
