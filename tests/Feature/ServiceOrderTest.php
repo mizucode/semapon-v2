@@ -1,7 +1,9 @@
 <?php
 
 use App\Livewire\Order\CreateOrder;
+use App\Livewire\Order\EditOrder;
 use App\Livewire\Order\OrderDetail;
+use App\Livewire\Order\OrderIndex;
 use App\Models\Customer;
 use App\Models\CustomerDevice;
 use App\Models\Service;
@@ -67,6 +69,15 @@ test('user can view orders index and see stats', function () {
     $response->assertSee('Order Servis');
 });
 
+test('user can search orders on index', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    Livewire::test(OrderIndex::class)
+        ->set('search', 'Poco')
+        ->assertSee('Order Servis');
+});
+
 test('user can create a service order via intake form', function () {
     $this->actingAs($this->ownerUser);
     session(['active_store_id' => $this->store->id]);
@@ -94,7 +105,8 @@ test('user can create a service order via intake form', function () {
 
     $order = ServiceOrder::where('customer_id', $this->customer->id)->first();
     expect($order)->not->toBeNull();
-    expect($order->order_number)->toStartWith('ORD-');
+    expect($order->order_number)->toMatch('/^ORD-\d{6}-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/');
+    expect(strlen($order->order_number))->toBe(19);
     expect(strlen($order->tracking_token))->toBe(64);
 });
 
@@ -155,6 +167,39 @@ test('user can advance service order status and log history', function () {
         'service_order_id' => $order->id,
         'from_status' => 'received',
         'to_status' => 'diagnosing',
+    ]);
+});
+
+test('technician can dynamically update order status to unrepairable with custom notes', function () {
+    $this->actingAs($this->ownerUser);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'order_number' => 'ORD-202611-0002',
+        'status' => 'diagnosing',
+        'complaints' => 'Mati total masuk air',
+        'tracking_token' => 'b1b2c3d4e5f67890123456789abcdef1',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->call('openUpdateStatusModal', 'unrepairable')
+        ->set('new_status', 'unrepairable')
+        ->set('status_notes', 'IC Power & CPU short parah, tidak bisa diperbaiki.')
+        ->call('updateStatusWithNotes')
+        ->assertHasNoErrors()
+        ->assertSet('showUpdateStatusModal', false);
+
+    $order->refresh();
+    expect($order->status)->toBe('unrepairable');
+
+    $this->assertDatabaseHas('service_order_histories', [
+        'service_order_id' => $order->id,
+        'from_status' => 'diagnosing',
+        'to_status' => 'unrepairable',
+        'notes' => 'IC Power & CPU short parah, tidak bisa diperbaiki.',
     ]);
 });
 
@@ -372,7 +417,7 @@ test('user can submit order with thousands separator dots in cost and down payme
     ]);
 });
 
-test('device imei is required when creating a service order with new device', function () {
+test('device imei is optional when creating a service order with new device', function () {
     $this->actingAs($this->ownerUser);
     session(['active_store_id' => $this->store->id]);
 
@@ -385,5 +430,144 @@ test('device imei is required when creating a service order with new device', fu
         ->set('device_imei', '')
         ->set('complaints', 'Bootloop')
         ->call('storeOrder')
-        ->assertHasErrors(['device_imei' => 'required']);
+        ->assertHasNoErrors(['device_imei']);
+});
+
+test('order detail displays disabled print receipt button when order has no items', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar sentuh mati',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->assertSee('Rincian Jasa')
+        ->assertSee('Sparepart Masih Kosong')
+        ->assertSee('Tutup')
+        ->assertSee('Tanda Terima');
+});
+
+test('user can access print intake receipt and print service receipt', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar sentuh mati',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    $response = $this->get(route('orders.print', ['id' => $order->id, 'type' => 'intake']));
+    $response->assertOk()
+        ->assertSee('TANDA TERIMA SERVIS');
+
+    $responseReceipt = $this->get(route('orders.print', ['id' => $order->id, 'type' => 'receipt']));
+    $responseReceipt->assertOk()
+        ->assertSee('NOTA SERVIS');
+});
+
+test('order detail displays physical condition photos section only when photos exist', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $orderWithoutPhotos = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar sentuh mati',
+        'created_by' => $this->ownerUser->id,
+        'photos' => [],
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $orderWithoutPhotos->id])
+        ->assertDontSee('Foto Kondisi Fisik Unit (Opsional)');
+
+    $orderWithPhotos = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar sentuh mati',
+        'created_by' => $this->ownerUser->id,
+        'photos' => ['orders/test/photo1.webp', 'orders/test/photo2.webp'],
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $orderWithPhotos->id])
+        ->assertSee('Foto Kondisi Fisik Unit (Opsional)')
+        ->assertSee('2 Foto');
+});
+
+test('user can access edit order page and update order data', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar sentuh mati',
+        'accessories_included' => 'Unit only',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    $response = $this->get(route('orders.edit', $order->id));
+    $response->assertOk()
+        ->assertSee('Edit Order')
+        ->assertSee('Mengedit order ini berdampak ke seluruh data terkait')
+        ->assertDontSee('Estimasi Biaya & Penugasan');
+
+    Livewire::test(EditOrder::class, ['id' => $order->id])
+        ->assertSet('complaints', 'Layar sentuh mati')
+        ->assertSet('customer_name', 'Budi Santoso')
+        ->set('complaints', 'Layar sentuh mati & casing retak')
+        ->set('accessories_included', 'Unit + Casing')
+        ->call('updateOrder')
+        ->assertHasNoErrors()
+        ->assertSessionHas('success')
+        ->assertRedirect(route('orders.show', $order->id));
+
+    $showResponse = $this->get(route('orders.show', $order->id));
+    $showResponse->assertOk()
+        ->assertSee('Order Berhasil Diperbarui')
+        ->assertSee("Perubahan pada Order #{$order->order_number} berhasil disimpan.");
+
+    expect($order->fresh()->complaints)->toBe('Layar sentuh mati & casing retak');
+    expect($order->fresh()->accessories_included)->toBe('Unit + Casing');
+});
+
+test('user can delete order from order detail', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar sentuh mati',
+        'accessories_included' => 'Unit only',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->assertSee('Kelola Order')
+        ->assertSee('Edit Order')
+        ->assertSee('Perhatian: Edit Data Order')
+        ->assertSee('Lanjutkan Edit Order')
+        ->assertSee('Hapus Order')
+        ->call('deleteOrder')
+        ->assertRedirect(route('orders.index'));
+
+    expect(ServiceOrder::find($order->id))->toBeNull();
 });

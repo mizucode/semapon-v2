@@ -25,6 +25,8 @@ class StoreSettings extends Component
 
     public string $receipt_footer = '';
 
+    public string $store_code = '';
+
     public int $default_warranty_days = 30;
 
     public int $thermal_paper_width = 58;
@@ -43,6 +45,7 @@ class StoreSettings extends Component
             $this->email = $store->email ?? '';
             $this->address = $store->address ?? '';
             $this->current_logo_path = $store->logo_path;
+            $this->store_code = $store->getStoreCode();
 
             $this->receipt_header = $store->getSetting('receipt_header', $store->name);
             $this->receipt_footer = $store->getSetting('receipt_footer', 'Terima kasih atas kunjungan Anda.');
@@ -57,6 +60,7 @@ class StoreSettings extends Component
 
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
+            'store_code' => ['required', 'string', 'min:2', 'max:8', 'regex:/^[A-Za-z0-9]+$/'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -65,6 +69,8 @@ class StoreSettings extends Component
             'default_warranty_days' => ['required', 'integer', 'min:0', 'max:365'],
             'thermal_paper_width' => ['required', 'in:58,80'],
             'logo' => ['nullable', 'image', 'max:2048'], // 2MB Max
+        ], [
+            'store_code.regex' => 'Kode toko hanya boleh berisi huruf dan angka tanpa spasi atau simbol.',
         ]);
 
         if ($this->logo) {
@@ -80,6 +86,7 @@ class StoreSettings extends Component
         $store->address = $validated['address'];
 
         $store->settings = array_merge($store->settings ?? [], [
+            'store_code' => strtoupper($validated['store_code']),
             'receipt_header' => $validated['receipt_header'],
             'receipt_footer' => $validated['receipt_footer'],
             'default_warranty_days' => $validated['default_warranty_days'],

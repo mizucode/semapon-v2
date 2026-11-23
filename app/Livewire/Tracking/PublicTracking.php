@@ -26,11 +26,12 @@ class PublicTracking extends Component
         // Resolve order safely via token service
         $resolvedOrder = $tokenService->resolveOrder($this->token, $request->ip());
 
-        // Fallback for direct token lookup on order model (if legacy or token table fallback)
+        // Support direct lookup by order_number (e.g. ORD-261119-AWKXBSQ7) or tracking_token
         if (! $resolvedOrder) {
             $resolvedOrder = ServiceOrder::withoutGlobalScopes()
                 ->with(['store', 'customer', 'device', 'items'])
-                ->where('tracking_token', $this->token)
+                ->where('order_number', $this->token)
+                ->orWhere('tracking_token', $this->token)
                 ->first();
         }
 
@@ -42,6 +43,7 @@ class PublicTracking extends Component
         }
 
         $this->order = $resolvedOrder;
+        $this->order->loadMissing(['histories.user']);
     }
 
     public function approveEstimate(): void

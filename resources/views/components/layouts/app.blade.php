@@ -286,7 +286,7 @@
 
         <!-- Mobile Bottom Navigation Bar (Sticky) -->
         <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-30 px-2 py-1 shadow-lg">
-            <div class="grid grid-cols-5 items-center justify-around text-center">
+            <div class="grid grid-cols-4 items-center justify-around text-center">
                 <!-- 1. Home / Dashboard -->
                 <a href="{{ Route::has('dashboard') ? route('dashboard') : url('/') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('dashboard') ? 'text-primary-600 font-semibold' : 'text-slate-600 hover:text-primary-600' }}">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
@@ -299,24 +299,13 @@
                     <span class="text-3xs font-medium mt-1">Order</span>
                 </a>
 
-                <!-- 3. Floating Quick Add Order (+) -->
-                <div class="flex justify-center -mt-5">
-                    <a
-                        href="{{ Route::has('orders.create') ? route('orders.create') : '#' }}"
-                        class="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-lg hover:bg-primary-500 active:scale-95 transition-all"
-                        aria-label="Terima Servis Baru"
-                    >
-                        <i data-lucide="plus" class="w-6 h-6"></i>
-                    </a>
-                </div>
-
-                <!-- 4. Pelanggan -->
+                <!-- 3. Pelanggan -->
                 <a href="{{ Route::has('customers.index') ? route('customers.index') : '#' }}" class="flex flex-col items-center py-1 {{ request()->routeIs('customers.*') ? 'text-primary-600 font-semibold' : 'text-slate-600 hover:text-primary-600' }}">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     <span class="text-3xs font-medium mt-1">Pelanggan</span>
                 </a>
 
-                <!-- 5. Halaman Menu / Lainnya -->
+                <!-- 4. Halaman Menu / Lainnya -->
                 <a
                     href="{{ Route::has('menu') ? route('menu') : '#' }}"
                     class="flex flex-col items-center py-1 {{ request()->routeIs('menu') ? 'text-primary-600 font-semibold' : 'text-slate-600 hover:text-primary-600' }}"

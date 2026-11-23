@@ -3,8 +3,12 @@ import { createIcons, icons } from 'lucide';
 window.createIcons = createIcons;
 window.lucideIcons = icons;
 
+let lucideRaf = null;
 const initLucide = () => {
-    createIcons({ icons });
+    if (lucideRaf) cancelAnimationFrame(lucideRaf);
+    lucideRaf = requestAnimationFrame(() => {
+        createIcons({ icons });
+    });
 };
 
 document.addEventListener('DOMContentLoaded', initLucide);
@@ -13,14 +17,11 @@ document.addEventListener('livewire:navigated', initLucide);
 const setupLivewireHooks = () => {
     initLucide();
     if (window.Livewire) {
-        Livewire.hook('morph.updated', () => {
-            queueMicrotask(initLucide);
-        });
         Livewire.hook('commit', () => {
-            queueMicrotask(initLucide);
+            initLucide();
         });
-        Livewire.hook('element.init', () => {
-            queueMicrotask(initLucide);
+        Livewire.hook('morph.updated', () => {
+            initLucide();
         });
     }
 };

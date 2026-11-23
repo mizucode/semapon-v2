@@ -16,8 +16,8 @@
     @else
         @php
             $steps = [
-                'received' => ['label' => 'Diterima', 'icon' => 'inbox'],
-                'diagnosing' => ['label' => 'Diagnosa', 'icon' => 'search'],
+                'received' => ['label' => 'Menunggu Diagnosa', 'icon' => 'inbox'],
+                'diagnosing' => ['label' => 'Sedang Diagnosa', 'icon' => 'search'],
                 'in_progress' => ['label' => 'Pengerjaan', 'icon' => 'wrench'],
                 'testing' => ['label' => 'Pengujian QC', 'icon' => 'check-circle-2'],
                 'ready_for_pickup' => ['label' => 'Siap Diambil', 'icon' => 'bell'],
@@ -40,7 +40,7 @@
             $currentRank = $statusRank[$order->status] ?? 1;
 
             $statusLabels = [
-                'received' => 'Perangkat Diterima',
+                'received' => 'Unit Masuk (Menunggu Diagnosa)',
                 'diagnosing' => 'Sedang Didiagnosa',
                 'waiting_approval' => 'Menunggu Konfirmasi Anda',
                 'in_progress' => 'Sedang Dikerjakan Teknisi',
@@ -116,6 +116,66 @@
                             <span>Batalkan Servis</span>
                         </button>
                     </div>
+                </div>
+            @endif
+
+            <!-- Special Status Alert Banners -->
+            @if ($order->status === 'unrepairable')
+                @php
+                    $latestNote = $order->histories->whereNotNull('notes')->sortByDesc('created_at')->first()?->notes;
+                @endphp
+                <div class="p-4 sm:p-5 rounded-2xl bg-rose-50 border border-rose-200 space-y-2">
+                    <div class="flex items-center space-x-2.5 text-rose-800">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 shrink-0"></i>
+                        <h2 class="text-xs sm:text-sm font-bold">Perangkat Tidak Dapat Diperbaiki (Gagal Servis)</h2>
+                    </div>
+                    @if($latestNote)
+                        <div class="text-xs text-rose-900 bg-white/80 p-3 rounded-xl border border-rose-100">
+                            <span class="font-semibold block text-2xs text-rose-600 mb-0.5">Catatan Teknisi:</span>
+                            {{ $latestNote }}
+                        </div>
+                    @endif
+                    <p class="text-xs text-rose-700 leading-relaxed">
+                        Unit telah dirakit kembali seperti semula. Silakan kunjungi toko kami untuk mengambil perangkat Anda.
+                    </p>
+                </div>
+            @elseif ($order->status === 'cancelled')
+                @php
+                    $latestNote = $order->histories->whereNotNull('notes')->sortByDesc('created_at')->first()?->notes;
+                @endphp
+                <div class="p-4 sm:p-5 rounded-2xl bg-slate-100 border border-slate-200 space-y-2">
+                    <div class="flex items-center space-x-2.5 text-slate-800">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-slate-600 shrink-0"></i>
+                        <h2 class="text-xs sm:text-sm font-bold">Perbaikan Servis Dibatalkan</h2>
+                    </div>
+                    @if($latestNote)
+                        <div class="text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200">
+                            <span class="font-semibold block text-2xs text-slate-500 mb-0.5">Keterangan:</span>
+                            {{ $latestNote }}
+                        </div>
+                    @endif
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Perangkat dapat diambil kembali di toko kami pada jam operasional.
+                    </p>
+                </div>
+            @elseif ($order->status === 'waiting_parts')
+                @php
+                    $latestNote = $order->histories->whereNotNull('notes')->sortByDesc('created_at')->first()?->notes;
+                @endphp
+                <div class="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+                    <div class="flex items-center space-x-2.5 text-amber-800">
+                        <i data-lucide="package" class="w-5 h-5 text-amber-600 shrink-0"></i>
+                        <h2 class="text-xs sm:text-sm font-bold">Sedang Menunggu Suku Cadang (Sparepart)</h2>
+                    </div>
+                    @if($latestNote)
+                        <div class="text-xs text-amber-900 bg-white/80 p-3 rounded-xl border border-amber-100">
+                            <span class="font-semibold block text-2xs text-amber-600 mb-0.5">Catatan Teknisi:</span>
+                            {{ $latestNote }}
+                        </div>
+                    @endif
+                    <p class="text-xs text-amber-700 leading-relaxed">
+                        Pengerjaan akan segera dilanjutkan begitu suku cadang tiba di bengkel kami.
+                    </p>
                 </div>
             @endif
 
@@ -236,6 +296,36 @@
                 </div>
             @endif
         </div>
+
+        <!-- Customer Timeline Log Card -->
+        @if ($order->histories && $order->histories->isNotEmpty())
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-4">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-100">
+                    Riwayat Aktivitas & Progres Servis
+                </h2>
+
+                <div class="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                    @foreach ($order->histories->sortByDesc('created_at') as $history)
+                        <div class="relative text-xs">
+                            <div class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-bold text-slate-800">
+                                    {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}
+                                </span>
+                                <span class="text-3xs text-slate-400 whitespace-nowrap">
+                                    {{ $history->created_at->isoFormat('D MMM Y, HH:mm') }} WIB
+                                </span>
+                            </div>
+                            @if ($history->notes)
+                                <div class="mt-1 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 leading-relaxed font-normal">
+                                    {{ $history->notes }}
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         <!-- Share & Store Contact Card -->
         <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-4">

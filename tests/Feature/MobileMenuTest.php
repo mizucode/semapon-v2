@@ -45,7 +45,7 @@ test('mobile menu page renders successfully with sections and links', function (
     $response->assertSee('Budi Santoso');
     $response->assertSee('Mizutech Phone Care');
     $response->assertSee('Operasional Servis');
-    $response->assertSee('Order Servis');
+    $response->assertSee('Orderan Servis');
     $response->assertSee('Pelanggan');
     $response->assertSee('Katalog Layanan');
     $response->assertSee('Produk & Sparepart', false);

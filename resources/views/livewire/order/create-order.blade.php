@@ -1,9 +1,8 @@
-<div class="space-y-6">
+<div class="space-y-6 pb-16 sm:pb-24">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center justify-between gap-4">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Penerimaan Servis HP Baru</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Buat tanda terima servis, catat kondisi fisik unit, dan tugaskan teknisi.</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Tambah Service</h1>
         </div>
         <div>
             <x-button
@@ -134,7 +133,7 @@
                             type="button"
                             @click="mode = 'existing'"
                             wire:click="selectCustomer('{{ $duplicateCustomer->id }}')"
-                            class="px-3 py-1 rounded-xl bg-blue-600 text-white font-semibold text-2xs hover:bg-blue-700 shadow-xs shrink-0 ml-3 cursor-pointer"
+                            class="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 shadow-xs shrink-0 ml-3 cursor-pointer transition-colors"
                         >
                             Gunakan Pelanggan Ini
                         </button>
@@ -311,17 +310,8 @@
                     class="relative"
                     @click.outside="open = false"
                 >
-                    <label class="block text-sm font-semibold text-slate-800 mb-2 flex items-center justify-between">
-                        <span>Pencarian Cepat Katalog HP</span>
-                        <button
-                            type="button"
-                            x-show="selectedCatalogId"
-                            x-cloak
-                            @click="clear()"
-                            class="text-xs text-rose-600 hover:text-rose-700 font-medium inline-flex items-center gap-1 cursor-pointer"
-                        >
-                            <i data-lucide="x" class="w-3.5 h-3.5"></i> Bersihkan Pilihan
-                        </button>
+                    <label class="block text-sm font-semibold text-slate-800 mb-2">
+                        Pencarian Cepat Katalog HP
                     </label>
 
                     <div class="relative">
@@ -412,15 +402,14 @@
                         @error('device_model') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <!-- Nomor IMEI / SN (Tepat setelah Model / Tipe HP & Wajib) -->
+                    <!-- Nomor IMEI / SN (Opsional) -->
                     <div>
-                        <label for="d_imei" class="block text-sm font-semibold text-slate-800 mb-2">Nomor IMEI / SN <span class="text-rose-500">*</span></label>
+                        <label for="d_imei" class="block text-sm font-semibold text-slate-800 mb-2">Nomor IMEI / SN <span class="text-xs font-normal text-slate-400">(Opsional)</span></label>
                         <input
                             wire:model="device_imei"
                             type="text"
                             id="d_imei"
-                            required
-                            placeholder="15 Digit IMEI unit..."
+                            placeholder="15 Digit IMEI unit (opsional)..."
                             class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
                         >
                         @error('device_imei') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
@@ -712,7 +701,7 @@
                 <div class="flex items-center justify-between mb-3">
                     <div>
                         <label class="block text-sm font-semibold text-slate-800">Foto Kondisi Fisik Unit (Opsional)</label>
-                        <p class="text-xs text-slate-400 mt-0.5">Dokumentasi fisik perangkat saat diterima (otomatis dikompresi agar hemat penyimpanan & cepat diunggah).</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Dokumentasi fisik perangkat saat diterima.</p>
                     </div>
 
                     @if(count($device_photos) > 0)
@@ -818,76 +807,67 @@
                     />
                 </div>
 
-                <div>
+                <div x-data="{ undeterminedCost: $wire.entangle('is_cost_undetermined') }">
                     <div class="flex items-center justify-between mb-2">
-                        <label for="estimated_cost" class="block text-sm font-semibold text-slate-800">Estimasi Biaya Total (Rp)</label>
+                        <label for="estimated_cost" class="block text-sm font-semibold text-slate-800">Estimasi Biaya</label>
                         <x-toggle
-                            wire:model.live="is_cost_undetermined"
+                            x-model="undeterminedCost"
                             label="Tentukan Nanti"
                         />
                     </div>
-                    @if($is_cost_undetermined)
-                        <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 flex items-center justify-between transition-all">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                                    <i data-lucide="help-circle" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <span class="font-bold text-slate-900 block">Biaya Menunggu Diagnosa Teknisi</span>
-                                    <span class="text-[11px] text-slate-600 block mt-0.5">Biaya awal diset Rp0. Teknisi akan membongkar unit dan konfirmasi biaya ke pelanggan via WhatsApp.</span>
-                                </div>
+                    <div x-show="undeterminedCost" x-cloak class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                                <i data-lucide="help-circle" class="w-4 h-4"></i>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-md bg-amber-500 text-white text-2xs font-bold uppercase tracking-wider shrink-0 shadow-2xs">
-                                Pending
-                            </span>
+                            <div>
+                                <span class="font-bold text-slate-900 block">Pending Estimasi Biaya</span>
+                                <span class="text-[11px] text-slate-600 block mt-0.5">Biaya Menunggu Diagnosa Teknisi</span>
+                            </div>
                         </div>
-                    @else
+                    </div>
+                    <div x-show="!undeterminedCost" x-cloak>
                         <input
                             wire:model="estimated_cost"
                             type="text"
                             inputmode="numeric"
                             id="estimated_cost"
-                            required
                             placeholder="0"
                             oninput="window.formatRupiahInput(this)"
                             onpaste="setTimeout(() => window.formatRupiahInput(this), 0)"
                             onkeydown="if(!/[0-9]/.test(event.key) && !['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End','Enter','.'].includes(event.key) && !event.ctrlKey && !event.metaKey){ event.preventDefault(); }"
                             class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
                         >
-                    @endif
+                    </div>
                 </div>
 
-                <div>
+                <div x-data="{ undeterminedCompletion: $wire.entangle('is_completion_undetermined') }">
                     <div class="flex items-center justify-between mb-2">
                         <label for="estimated_completion_at" class="block text-sm font-semibold text-slate-800">Estimasi Selesai</label>
                         <x-toggle
-                            wire:model.live="is_completion_undetermined"
+                            x-model="undeterminedCompletion"
                             label="Tentukan Nanti"
                         />
                     </div>
-                    @if($is_completion_undetermined)
-                        <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 flex items-center justify-between transition-all">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                                    <i data-lucide="clock" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <span class="font-bold text-slate-900 block">Estimasi Selesai Menyusul</span>
-                                    <span class="text-[11px] text-slate-600 block mt-0.5">Jadwal penyelesaian unit akan disepakati bersama pelanggan setelah kerusakan teridentifikasi.</span>
-                                </div>
+                    <div x-show="undeterminedCompletion" x-cloak class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-xs text-amber-900 flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                                <i data-lucide="clock" class="w-4 h-4"></i>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-md bg-amber-500 text-white text-2xs font-bold uppercase tracking-wider shrink-0 shadow-2xs">
-                                Pending
-                            </span>
+                            <div>
+                                <span class="font-bold text-slate-900 block">Pending Estimasi Selesai</span>
+                                <span class="text-[11px] text-slate-600 block mt-0.5">Estimasi Selesai Menyusul</span>
+                            </div>
                         </div>
-                    @else
+                    </div>
+                    <div x-show="!undeterminedCompletion" x-cloak>
                         <input
                             wire:model="estimated_completion_at"
                             type="datetime-local"
                             id="estimated_completion_at"
                             class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
                         >
-                    @endif
+                    </div>
                 </div>
 
                 <div>
@@ -909,9 +889,9 @@
             </div>
         </x-card>
 
-        <div class="flex items-center justify-end space-x-3 pt-2">
-            <x-button type="submit" variant="primary" size="lg" loading="storeOrder" icon="check-circle">
-                Simpan & Terbitkan Nota Servis
+        <div class="flex items-center sm:justify-end pt-4">
+            <x-button type="submit" variant="primary" size="lg" loading="storeOrder" class="w-full sm:w-auto">
+                Buat Orderan
             </x-button>
         </div>
     </form>

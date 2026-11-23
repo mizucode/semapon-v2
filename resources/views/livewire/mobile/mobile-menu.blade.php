@@ -47,7 +47,7 @@
                         <i data-lucide="clipboard-list" class="w-5 h-5"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800">Order Servis</p>
+                        <p class="text-sm font-semibold text-slate-800">Orderan Servis</p>
                         <p class="text-2xs text-slate-500">Antrean masuk, proses, & siap ambil</p>
                     </div>
                 </div>

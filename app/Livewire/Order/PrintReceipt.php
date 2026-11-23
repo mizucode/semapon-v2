@@ -13,14 +13,27 @@ class PrintReceipt extends Component
     public ServiceOrder $order;
 
     #[Url]
-    public string $format = 'thermal'; // 'thermal' (58/80mm) or 'standard' (A4)
+    public string $format = 'thermal'; // 'thermal' (58/80mm), 'a5' (Kertas A5), or 'a4' (Kertas A4)
 
-    public function mount(string $id, ?string $format = null): void
+    #[Url]
+    public string $type = 'receipt'; // 'receipt' (Nota Servis) or 'intake' (Tanda Terima)
+
+    public function mount(string $id, ?string $format = null, ?string $type = null): void
     {
-        if ($format && in_array($format, ['thermal', 'standard'])) {
-            $this->format = $format;
-        } elseif (request()->query('format') && in_array(request()->query('format'), ['thermal', 'standard'])) {
-            $this->format = request()->query('format');
+        if ($type && in_array($type, ['receipt', 'intake'], true)) {
+            $this->type = $type;
+        } elseif (request()->query('type') && in_array(request()->query('type'), ['receipt', 'intake'], true)) {
+            $this->type = request()->query('type');
+        }
+
+        $requestedFormat = $format ?? request()->query('format');
+        if ($requestedFormat && in_array($requestedFormat, ['thermal', 'standard', 'a4', 'a5'], true)) {
+            $this->format = $requestedFormat === 'standard' ? 'a4' : $requestedFormat;
+        }
+
+        // Tanda terima servis hanya untuk format cetak lembar fisik (A5 / A4), bukan thermal
+        if ($this->type === 'intake' && $this->format === 'thermal') {
+            $this->format = 'a5';
         }
 
         $this->order = ServiceOrder::with([
@@ -34,10 +47,14 @@ class PrintReceipt extends Component
 
     public function render()
     {
+        $docTitle = $this->type === 'intake'
+            ? "Tanda Terima Servis #{$this->order->order_number}"
+            : "Nota Servis #{$this->order->order_number}";
+
         return view('livewire.order.print-receipt', [
             'store' => $this->order->store,
         ])->layoutData([
-            'title' => "Nota Servis #{$this->order->order_number}",
+            'title' => $docTitle,
         ]);
     }
 }

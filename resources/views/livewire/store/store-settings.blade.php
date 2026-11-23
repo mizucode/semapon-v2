@@ -9,18 +9,36 @@
         <div class="lg:col-span-2 space-y-6">
             <x-card title="Informasi Identitas Toko">
                 <div class="space-y-4">
-                    <div>
-                        <label for="name" class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Toko / Usaha Servis</label>
-                        <input
-                            wire:model="name"
-                            type="text"
-                            id="name"
-                            required
-                            class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors @error('name') border-rose-300 bg-rose-50/30 text-rose-900 @enderror"
-                        >
-                        @error('name')
-                            <p class="mt-1 text-2xs text-rose-600 font-medium">{{ $message }}</p>
-                        @enderror
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label for="name" class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Toko / Usaha Servis</label>
+                            <input
+                                wire:model="name"
+                                type="text"
+                                id="name"
+                                required
+                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors @error('name') border-rose-300 bg-rose-50/30 text-rose-900 @enderror"
+                            >
+                            @error('name')
+                                <p class="mt-1 text-2xs text-rose-600 font-medium">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="store_code" class="block text-xs font-semibold text-slate-700 mb-1.5">Kode Toko (ID Nota)</label>
+                            <input
+                                wire:model="store_code"
+                                type="text"
+                                id="store_code"
+                                required
+                                maxlength="6"
+                                placeholder="A5T5"
+                                class="block w-full uppercase font-bold rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors @error('store_code') border-rose-300 bg-rose-50/30 text-rose-900 @enderror"
+                            >
+                            @error('store_code')
+                                <p class="mt-1 text-2xs text-rose-600 font-medium">{{ $message }}</p>
+                            @enderror
+                            <span class="block mt-1 text-3xs text-slate-400">Contoh: ORD-{{ strtoupper($store_code ?: 'A5T5') }}-{{ date('Y') }}-0001</span>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

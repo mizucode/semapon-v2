@@ -113,4 +113,14 @@ class Store extends Model
     {
         return data_get($this->settings, $key, $default);
     }
+
+    public function getStoreCode(): string
+    {
+        $code = $this->getSetting('store_code');
+        if (! empty($code)) {
+            return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $code));
+        }
+
+        return strtoupper(substr($this->id, -4));
+    }
 }

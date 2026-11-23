@@ -16,7 +16,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app', ['title' => 'Terima Servis Baru', 'breadcrumbs' => [['label' => 'Order', 'url' => '/orders'], ['label' => 'Penerimaan Servis']]])]
+#[Layout('components.layouts.app', ['title' => 'Tambah Service', 'breadcrumbs' => [['label' => 'Order', 'url' => '/orders'], ['label' => 'Tambah Service']]])]
 class CreateOrder extends Component
 {
     use WithFileUploads;
@@ -101,7 +101,9 @@ class CreateOrder extends Component
 
     public function mount(): void
     {
-        // Default is undetermined (Menunggu Diagnosa)
+        if (empty($this->estimated_completion_at)) {
+            $this->estimated_completion_at = now()->addDays(2)->format('Y-m-d\TH:i');
+        }
     }
 
     public function updatedIsCostUndetermined(bool $value): void
@@ -331,6 +333,7 @@ class CreateOrder extends Component
             'estimated_cost' => $this->is_cost_undetermined ? ['nullable', 'numeric', 'min:0'] : ['required', 'numeric', 'min:0'],
             'down_payment' => ['required', 'numeric', 'min:0'],
             'estimated_completion_at' => $this->is_completion_undetermined ? ['nullable'] : ['nullable', 'date'],
+            'device_imei' => ['nullable', 'string', 'max:50'],
         ];
 
         if ($this->is_new_customer) {
@@ -342,12 +345,10 @@ class CreateOrder extends Component
         if (! $this->customer_device_id) {
             $rules['device_brand'] = ['required', 'string', 'max:60'];
             $rules['device_model'] = ['required', 'string', 'max:100'];
-            $rules['device_imei'] = ['required', 'string', 'max:50'];
         }
 
         $this->validate($rules, [
             'customer_phone.regex' => 'Format nomor WhatsApp / HP harus diawali 08 dan terdiri dari 10-16 digit angka.',
-            'device_imei.required' => 'Nomor IMEI / SN unit wajib diisi.',
             'device_brand.required' => 'Merek / Brand smartphone wajib diisi.',
             'device_model.required' => 'Model / Tipe HP wajib diisi.',
         ]);

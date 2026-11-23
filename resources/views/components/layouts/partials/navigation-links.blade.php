@@ -63,7 +63,7 @@ $activeIconClass = 'w-5 h-5 mr-3 shrink-0 text-white';
 
         <a href="{{ Route::has('orders.index') ? route('orders.index') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('orders.*') ? $activeClass : $inactiveClass }}">
             <i data-lucide="clipboard-list" class="{{ request()->routeIs('orders.*') ? $activeIconClass : $iconClass }}"></i>
-            <span>Order Servis</span>
+            <span>Orderan Servis</span>
         </a>
 
         <a href="{{ Route::has('services.index') ? route('services.index') : '#' }}" class="{{ $navItemClass }} {{ request()->routeIs('services.*') ? $activeClass : $inactiveClass }}">

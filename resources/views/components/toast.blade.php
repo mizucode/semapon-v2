@@ -1,6 +1,15 @@
 <div
     x-data="{
         toasts: [],
+        init() {
+            @if (session()->has('toast'))
+                this.add(@json(session('toast')));
+            @elseif (session()->has('success'))
+                this.add({ type: 'success', title: 'Berhasil', message: @json(session('success')) });
+            @elseif (session()->has('status'))
+                this.add({ type: 'success', title: 'Berhasil', message: @json(session('status')) });
+            @endif
+        },
         add(data) {
             let toast = Array.isArray(data) ? (data[0] || {}) : (data || {});
             if (typeof toast === 'string') {

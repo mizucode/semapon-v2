@@ -13,6 +13,7 @@ use App\Livewire\Inventory\ProductIndex;
 use App\Livewire\Mobile\MobileMenu;
 use App\Livewire\Notification\NotificationList;
 use App\Livewire\Order\CreateOrder;
+use App\Livewire\Order\EditOrder;
 use App\Livewire\Order\OrderDetail;
 use App\Livewire\Order\OrderIndex;
 use App\Livewire\Order\PrintReceipt;
@@ -92,6 +93,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', OrderIndex::class)->name('orders.index');
         Route::get('/orders/create', CreateOrder::class)->name('orders.create');
         Route::get('/orders/{id}', OrderDetail::class)->name('orders.show');
+        Route::get('/orders/{id}/edit', EditOrder::class)->name('orders.edit');
         Route::get('/orders/{id}/print', PrintReceipt::class)->name('orders.print');
 
         // Inventory & Spareparts

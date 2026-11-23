@@ -4,7 +4,7 @@
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Antrean & Riwayat Order Servis</h1>
         </div>
-        <div>
+        <div class="hidden lg:block">
             <x-button
                 href="{{ route('orders.create') }}"
                 icon="plus"
@@ -13,6 +13,16 @@
             </x-button>
         </div>
     </div>
+
+    <!-- Floating Action Button (Mobile) -->
+    <a
+        href="{{ route('orders.create') }}"
+        class="lg:hidden fixed bottom-14 right-4 z-40 inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm rounded-full shadow-lg shadow-primary-600/30 active:scale-95 transition-all"
+        aria-label="Tambah Servis"
+    >
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>Tambah</span>
+    </a>
 
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -31,8 +41,10 @@
                     <i data-lucide="search" class="w-4 h-4"></i>
                 </div>
                 <input
+                    wire:key="orders-search-input"
                     wire:model.live.debounce.300ms="search"
                     type="text"
+                    autocomplete="off"
                     placeholder="Cari nomor nota (#ORD), nama, HP, atau tipe HP..."
                     class="block w-full rounded-xl border border-slate-200 pl-10 pr-9 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
                 >
@@ -55,8 +67,8 @@
                         $statusLabels = [
                             '' => 'Semua Status',
                             'active_queue' => 'Antrean & Pengerjaan',
-                            'received' => 'Diterima',
-                            'diagnosing' => 'Diagnosa',
+                            'received' => 'Menunggu Diagnosa',
+                            'diagnosing' => 'Sedang Diagnosa',
                             'waiting_approval' => 'Tunggu Konfirmasi',
                             'in_progress' => 'Dalam Pengerjaan',
                             'waiting_parts' => 'Menunggu Sparepart',
@@ -108,12 +120,12 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="transform opacity-100 scale-100"
                         x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute left-0 lg:right-0 lg:left-auto mt-1.5 w-60 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-40 max-h-[480px] overflow-y-auto"
+                        class="absolute left-0 lg:right-0 lg:left-auto mt-1.5 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40"
                     >
                         <div class="px-3.5 py-1.5 text-3xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                             Pilih Status
                         </div>
-                        <div class="py-1">
+                        <div class="py-1 max-h-64 overflow-y-auto">
                             @foreach($statusLabels as $value => $label)
                                 <button
                                     type="button"
@@ -236,12 +248,9 @@
                 <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold text-3xs">
                     <tr>
                         <th class="py-3 px-5">Nota & Tanggal</th>
-                        <th class="py-3 px-5">Pelanggan</th>
-                        <th class="py-3 px-5">Perangkat HP</th>
-                        <th class="py-3 px-5">Keluhan</th>
-                        <th class="py-3 px-5">Teknisi</th>
+                        <th class="py-3 px-5">Pelanggan & Unit</th>
+                        <th class="py-3 px-5">Keluhan & Teknisi</th>
                         <th class="py-3 px-5">Status</th>
-                        <th class="py-3 px-5 text-right">Biaya / DP</th>
                         <th class="py-3 px-5 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -252,41 +261,36 @@
                                 <a href="{{ route('orders.show', $order->id) }}" class="font-bold text-slate-900 hover:text-primary-600 block">
                                     #{{ $order->order_number }}
                                 </a>
-                                <span class="text-3xs text-slate-400 block font-normal">{{ $order->created_at->format('d/m/Y H:i') }}</span>
+                                <span class="text-xs text-slate-400 block font-normal mt-0.5">{{ $order->created_at->format('d/m/Y H:i') }}</span>
                             </td>
                             <td class="py-3 px-5 whitespace-nowrap">
-                                <span class="font-semibold text-slate-800 block">{{ $order->customer->name }}</span>
-                                <span class="text-3xs text-slate-400 font-mono">{{ $order->customer->phone }}</span>
-                            </td>
-                            <td class="py-3 px-5 whitespace-nowrap">
-                                <span class="font-semibold text-slate-900 block">{{ $order->device->device_name }}</span>
-                                <span class="text-3xs text-slate-400">{{ $order->device->color ?: 'Tanpa warna' }}</span>
-                            </td>
-                            <td class="py-3 px-5 max-w-xs truncate text-slate-600">
-                                {{ $order->complaints }}
-                            </td>
-                            <td class="py-3 px-5 whitespace-nowrap">
-                                @if($order->technician)
-                                    <span class="inline-flex items-center text-xs text-slate-800">
-                                        <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold text-3xs flex items-center justify-center mr-1.5">
-                                            {{ strtoupper(substr($order->technician->name, 0, 1)) }}
-                                        </span>
-                                        {{ $order->technician->name }}
-                                    </span>
-                                @else
-                                    <span class="text-slate-400 italic text-2xs">Belum ditugaskan</span>
-                                @endif
-                            </td>
-                            <td class="py-3 px-5 whitespace-nowrap">
-                                <x-badge :status="$order->status" />
-                            </td>
-                            <td class="py-3 px-5 text-right whitespace-nowrap">
-                                <span class="font-bold text-slate-900 block">
-                                    Rp{{ number_format($order->total_cost, 0, ',', '.') }}
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="font-semibold text-slate-800">{{ $order->customer->name }}</span>
+                                    @if($order->customer->phone)
+                                        <span class="text-xs text-slate-500 font-normal">({{ $order->customer->phone }})</span>
+                                    @endif
+                                </div>
+                                <span class="text-xs text-slate-600 block mt-0.5">
+                                    <span class="font-medium text-slate-700">{{ $order->device->device_name }}</span>
+                                    @if($order->device->color)
+                                        <span class="text-slate-400 text-xs">({{ $order->device->color }})</span>
+                                    @endif
                                 </span>
-                                @if($order->down_payment > 0)
-                                    <span class="text-3xs text-emerald-600 block">DP: Rp{{ number_format($order->down_payment, 0, ',', '.') }}</span>
-                                @endif
+                            </td>
+                            <td class="py-3 px-5 max-w-xs">
+                                <p class="text-xs text-slate-700 truncate" title="{{ $order->complaints }}">
+                                    {{ $order->complaints ?: '-' }}
+                                </p>
+                                <div class="mt-0.5 text-xs text-slate-500">
+                                    @if($order->technician)
+                                        <span class="truncate block">{{ $order->technician->name }}</span>
+                                    @else
+                                        <span class="text-slate-400 italic">Belum ditugaskan</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="py-3 px-5 whitespace-nowrap">
+                                <x-status-badge :status="$order->status" />
                             </td>
                             <td class="py-3 px-5 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end">
@@ -310,38 +314,60 @@
         <!-- Mobile Cards List -->
         <div class="sm:hidden space-y-3">
             @foreach($orders as $order)
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <a href="{{ route('orders.show', $order->id) }}" class="font-bold text-sm text-slate-900 hover:text-primary-600">
-                                    #{{ $order->order_number }}
-                                </a>
-                                <span class="text-3xs text-slate-400">{{ $order->created_at->format('d M') }}</span>
-                            </div>
-                            <h4 class="font-semibold text-xs text-slate-800 mt-1">{{ $order->device->device_name }}</h4>
-                        </div>
-                        <x-badge :status="$order->status" size="sm" />
+                <a
+                    href="{{ route('orders.show', $order->id) }}"
+                    class="block bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-slate-300 active:scale-[0.99] transition-all space-y-2.5 cursor-pointer group"
+                >
+                    <!-- 1. Header: Date & Time + Tinted Status Badge -->
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs text-slate-400 font-medium">
+                            {{ $order->created_at->format('d/m/Y H:i') }}
+                        </span>
+                        <x-status-badge :status="$order->status" size="sm" :tinted="true" />
                     </div>
 
-                    <p class="text-2xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-xl">
-                        <strong class="text-slate-700">Keluhan:</strong> {{ $order->complaints }}
+                    <!-- 2. Order Number (Primary Title) & Customer + Device Info -->                    <div>
+                        <h3 class="text-[15px] font-bold text-slate-900 leading-snug">
+                            #{{ $order->order_number }}
+                        </h3>
+                        <div class="mt-2 space-y-0.5">
+                            <div class="text-xs text-slate-700 truncate">
+                                <span class="font-medium text-slate-800">{{ $order->customer->name }}</span>
+                                @if($order->customer->phone)
+                                    <span class="text-slate-400 text-xs">({{ $order->customer->phone }})</span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-slate-600 truncate font-medium">
+                                <span class="text-slate-700">{{ $order->device?->brand }} {{ $order->device?->model }}</span>
+                                @if($order->device?->variant)
+                                    <span class="font-normal text-slate-500">({{ $order->device->variant }})</span>
+                                @endif
+                                @if($order->device?->color)
+                                    <span class="font-normal text-slate-400">({{ $order->device->color }})</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Complaints (Left-aligned with Device & Customer) -->
+                    <p class="text-xs text-slate-700 line-clamp-2 pb-1">
+                        <span class="font-medium">Keluhan:</span>
+                        <span>{{ $order->complaints ?: '-' }}</span>
                     </p>
 
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <!-- 4. Footer: Tabular Price with Rp. prefix & Solid Action Button -->
+                    <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs">
                         <div>
-                            <span class="text-2xs text-slate-500 block">Pelanggan: {{ $order->customer->name }}</span>
-                            <span class="font-bold text-sm text-slate-900">Rp{{ number_format($order->total_cost, 0, ',', '.') }}</span>
+                            <span class="font-bold text-sm sm:text-base text-slate-900 tabular-nums">
+                                Rp. {{ number_format($order->total_cost, 0, ',', '.') }}
+                            </span>
                         </div>
-                        <a
-                            href="{{ route('orders.show', $order->id) }}"
-                            class="inline-flex shrink-0 items-center justify-center h-8 px-3 gap-1 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all active:translate-y-px cursor-pointer shadow-xs"
-                        >
-                            <span>Buka Order</span>
+                        <span class="inline-flex items-center justify-center h-8 px-3.5 rounded-lg bg-primary-600 group-hover:bg-primary-700 text-white text-xs font-semibold gap-1.5 shadow-xs transition-colors">
+                            <span>Lihat Detail</span>
                             <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                        </a>
+                        </span>
                     </div>
-                </div>
+                </a>
             @endforeach
         </div>
 

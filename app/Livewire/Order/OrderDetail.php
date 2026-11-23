@@ -24,6 +24,76 @@ class OrderDetail extends Component
 
     public bool $showAssignTechModal = false;
 
+    public bool $showUpdateStatusModal = false;
+
+    // Status update fields
+    public string $new_status = '';
+
+    public string $status_notes = '';
+
+    public const STATUS_OPTIONS = [
+        'received' => [
+            'label' => 'Menunggu Diagnosa',
+            'badge' => 'Menunggu Diagnosa',
+            'color' => 'blue',
+            'description' => 'Unit baru masuk bengkel dan menunggu giliran diagnosa oleh teknisi.',
+        ],
+        'diagnosing' => [
+            'label' => 'Sedang Diagnosa / Pemeriksaan',
+            'badge' => 'Sedang Diagnosa',
+            'color' => 'purple',
+            'description' => 'Teknisi sedang membongkar dan memeriksa sumber kerusakan.',
+        ],
+        'waiting_approval' => [
+            'label' => 'Tunggu Konfirmasi Biaya',
+            'badge' => 'Tunggu Konfirmasi',
+            'color' => 'amber',
+            'description' => 'Hasil diagnosa selesai, menunggu persetujuan biaya dari pelanggan.',
+        ],
+        'in_progress' => [
+            'label' => 'Dalam Pengerjaan Servis',
+            'badge' => 'Dalam Pengerjaan',
+            'color' => 'indigo',
+            'description' => 'Teknisi aktif melakukan perbaikan atau pergantian sparepart.',
+        ],
+        'waiting_parts' => [
+            'label' => 'Menunggu Sparepart',
+            'badge' => 'Menunggu Sparepart',
+            'color' => 'orange',
+            'description' => 'Pengerjaan dijeda menunggu ketersediaan atau pesanan suku cadang.',
+        ],
+        'testing' => [
+            'label' => 'Pengujian Fungsi (QC)',
+            'badge' => 'Pengujian (QC)',
+            'color' => 'violet',
+            'description' => 'Perbaikan selesai, sedang dilakukan checklist uji fungsi gadget.',
+        ],
+        'ready_for_pickup' => [
+            'label' => 'Siap Diambil Pelanggan',
+            'badge' => 'Siap Diambil',
+            'color' => 'sky',
+            'description' => 'Gadget sudah selesai diuji dan siap diserahkan kepada pelanggan.',
+        ],
+        'completed' => [
+            'label' => 'Selesai & Unit Diambil',
+            'badge' => 'Selesai',
+            'color' => 'emerald',
+            'description' => 'Unit telah diserahkan kembali dan diambil oleh pelanggan.',
+        ],
+        'unrepairable' => [
+            'label' => 'Tidak Bisa Diperbaiki (Gagal)',
+            'badge' => 'Tidak Bisa Diperbaiki',
+            'color' => 'rose',
+            'description' => 'Kerusakan parah/IC dead dan tidak memungkinkan untuk diperbaiki.',
+        ],
+        'cancelled' => [
+            'label' => 'Dibatalkan Pelanggan',
+            'badge' => 'Dibatalkan',
+            'color' => 'slate',
+            'description' => 'Perbaikan dibatalkan atas permintaan pelanggan atau alasan lain.',
+        ],
+    ];
+
     // Item form fields
     public ?string $selected_service_id = null;
 
@@ -74,26 +144,42 @@ class OrderDetail extends Component
     public function advanceStatus(string $newStatus, ?string $notes = null): void
     {
         $this->order->updateStatus($newStatus, $notes, Auth::id());
-        $this->order->refresh();
+        $this->order->load([
+            'customer',
+            'device',
+            'technician',
+            'items.service',
+            'diagnoses.technician',
+            'histories.user',
+        ]);
 
-        $statusLabels = [
-            'received' => 'Diterima',
-            'diagnosing' => 'Diagnosa',
-            'waiting_approval' => 'Tunggu Konfirmasi',
-            'in_progress' => 'Sedang Dikerjakan',
-            'waiting_parts' => 'Menunggu Sparepart',
-            'testing' => 'Pengujian (QC)',
-            'ready_for_pickup' => 'Siap Diambil',
-            'completed' => 'Selesai & Diambil',
-            'cancelled' => 'Dibatalkan',
-            'unrepairable' => 'Tidak Bisa Diperbaiki',
-        ];
+        $badge = self::STATUS_OPTIONS[$newStatus]['badge'] ?? ucfirst(str_replace('_', ' ', $newStatus));
 
         $this->dispatch('toast', [
             'type' => 'success',
             'title' => 'Status Diperbarui',
-            'message' => 'Status order kini: '.($statusLabels[$newStatus] ?? ucfirst(str_replace('_', ' ', $newStatus))),
+            'message' => "Status order kini: {$badge}",
         ]);
+    }
+
+    public function openUpdateStatusModal(?string $targetStatus = null): void
+    {
+        $this->new_status = $targetStatus ?? $this->order->status;
+        $this->status_notes = '';
+        $this->resetValidation();
+        $this->showUpdateStatusModal = true;
+    }
+
+    public function updateStatusWithNotes(): void
+    {
+        $this->validate([
+            'new_status' => ['required', 'string', 'in:'.implode(',', array_keys(self::STATUS_OPTIONS))],
+            'status_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $this->advanceStatus($this->new_status, $this->status_notes ?: null);
+        $this->showUpdateStatusModal = false;
+        $this->reset(['new_status', 'status_notes']);
     }
 
     public function openAddItemModal(): void
@@ -275,6 +361,19 @@ class OrderDetail extends Component
         ]);
     }
 
+    public function deleteOrder(): mixed
+    {
+        $orderNumber = $this->order->order_number;
+
+        DB::transaction(function () {
+            $this->order->delete();
+        });
+
+        session()->flash('success', "Order #{$orderNumber} berhasil dihapus.");
+
+        return $this->redirect(route('orders.index'), navigate: true);
+    }
+
     public function render()
     {
         $availableServices = Service::where('is_active', true)->get();
@@ -283,6 +382,8 @@ class OrderDetail extends Component
         return view('livewire.order.order-detail', [
             'availableServices' => $availableServices,
             'technicians' => $technicians,
+            'statusOptions' => self::STATUS_OPTIONS,
+            'statusLabels' => collect(self::STATUS_OPTIONS)->mapWithKeys(fn ($opt, $k) => [$k => $opt['badge']])->all(),
         ])->layoutData([
             'title' => "Order #{$this->order->order_number}",
             'breadcrumbs' => [

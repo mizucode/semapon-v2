@@ -66,20 +66,7 @@ class ServiceOrder extends Model
             }
 
             if (empty($order->order_number)) {
-                $prefix = 'ORD-'.date('Ym').'-';
-                $latest = static::withoutGlobalScopes()
-                    ->where('store_id', $order->store_id)
-                    ->where('order_number', 'like', "{$prefix}%")
-                    ->latest('id')
-                    ->value('order_number');
-
-                $nextNumber = 1;
-                if ($latest) {
-                    $parts = explode('-', $latest);
-                    $nextNumber = ((int) end($parts)) + 1;
-                }
-
-                $order->order_number = $prefix.str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
+                $order->order_number = static::generateOrderNumber();
             }
         });
 
@@ -93,6 +80,26 @@ class ServiceOrder extends Model
                 ]);
             }
         });
+    }
+
+    /**
+     * Generate unique human-safe order number: ORD-YYMMDD-XXXXXXXX (Base32 safe without 0, O, 1, I).
+     */
+    public static function generateOrderNumber(): string
+    {
+        $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $charLength = strlen($chars);
+        $datePrefix = 'ORD-'.date('ymd').'-';
+
+        do {
+            $suffix = '';
+            for ($i = 0; $i < 8; $i++) {
+                $suffix .= $chars[random_int(0, $charLength - 1)];
+            }
+            $orderNumber = $datePrefix.$suffix;
+        } while (static::withoutGlobalScopes()->where('order_number', $orderNumber)->exists());
+
+        return $orderNumber;
     }
 
     public function trackingTokens(): HasMany
@@ -138,6 +145,21 @@ class ServiceOrder extends Model
     public function getRemainingBalanceAttribute(): float
     {
         return max(0.0, (float) $this->total_cost - (float) $this->paid_amount);
+    }
+
+    public function getComplaintAttribute(): ?string
+    {
+        return $this->complaints;
+    }
+
+    public function getAccessoriesBroughtAttribute(): ?string
+    {
+        return $this->accessories_included;
+    }
+
+    public function getSecurityCodeAttribute(): ?string
+    {
+        return $this->passcode ?? $this->device?->security_code;
     }
 
     public function updateStatus(string $newStatus, ?string $notes = null, ?string $userId = null): void

@@ -41,16 +41,17 @@ class OrderIndex extends Component
 
         $orders = ServiceOrder::with(['customer', 'device', 'technician'])
             ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('order_number', 'like', "%{$this->search}%")
-                        ->orWhereHas('customer', function ($cq) {
-                            $cq->where('name', 'like', "%{$this->search}%")
-                                ->orWhere('phone', 'like', "%{$this->search}%");
+                $search = trim($this->search);
+                $query->where(function ($q) use ($search) {
+                    $q->where('order_number', 'like', "%{$search}%")
+                        ->orWhereHas('customer', function ($cq) use ($search) {
+                            $cq->where('name', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
                         })
-                        ->orWhereHas('device', function ($dq) {
-                            $dq->where('brand', 'like', "%{$this->search}%")
-                                ->orWhere('model', 'like', "%{$this->search}%")
-                                ->orWhere('imei', 'like', "%{$this->search}%");
+                        ->orWhereHas('device', function ($dq) use ($search) {
+                            $dq->where('brand', 'like', "%{$search}%")
+                                ->orWhere('model', 'like', "%{$search}%")
+                                ->orWhere('imei', 'like', "%{$search}%");
                         });
                 });
             })

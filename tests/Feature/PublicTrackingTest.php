@@ -63,6 +63,13 @@ test('guest can access public tracking without authentication', function () {
     $response->assertSee('Dokter Gadget');
 });
 
+test('guest can access public tracking using order_number', function () {
+    $response = $this->get(route('tracking.show', $this->order->order_number));
+    $response->assertStatus(200);
+    $response->assertSee('#ORD-202611-7777');
+    $response->assertSee('iPhone 13');
+});
+
 test('public tracking never exposes sensitive lockscreen PIN or passcode', function () {
     $token = $this->order->tracking_token;
 
