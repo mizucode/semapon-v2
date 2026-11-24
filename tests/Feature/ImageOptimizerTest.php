@@ -73,6 +73,7 @@ test('create order stores compressed photos when saving order', function () {
         ->set('customer_mode', 'new')
         ->set('customer_name', 'Rizky Kurniawan')
         ->set('customer_phone', '081299887766')
+        ->set('customer_address', 'Jl. Sukajadi No. 12, Bandung')
         ->set('device_brand', 'Samsung')
         ->set('device_model', 'Galaxy A54')
         ->set('device_imei', '861234567890123')

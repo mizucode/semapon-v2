@@ -5,6 +5,7 @@ namespace App\Livewire\Order;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\TechnicianProfile;
+use App\Services\FinanceService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -135,6 +136,7 @@ class OrderDetail extends Component
             'items.service',
             'diagnoses.technician',
             'histories.user',
+            'payments.user',
         ])->findOrFail($id);
 
         $this->assigned_technician_id = $this->order->technician_id;
@@ -298,34 +300,34 @@ class OrderDetail extends Component
         ]);
     }
 
-    public function recordPayment(): void
+    public function recordPayment(FinanceService $financeService): void
     {
         $this->validate([
             'payment_amount' => ['required', 'numeric', 'min:1'],
+            'payment_method' => ['required', 'string', 'in:cash,transfer,qris'],
+            'payment_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        DB::transaction(function () {
-            $newPaidTotal = (float) $this->order->paid_amount + $this->payment_amount;
-            $this->order->paid_amount = $newPaidTotal;
+        $financeService->recordOrderPayment(
+            order: $this->order,
+            amount: (float) $this->payment_amount,
+            method: $this->payment_method,
+            userId: Auth::id(),
+            notes: $this->payment_notes ?: null,
+        );
 
-            if ($newPaidTotal >= (float) $this->order->total_cost) {
-                $this->order->payment_status = 'paid';
-            } else {
-                $this->order->payment_status = 'partially_paid';
-            }
-
-            $this->order->save();
-
-            $this->order->histories()->create([
-                'store_id' => $this->order->store_id,
-                'user_id' => Auth::id(),
-                'from_status' => $this->order->status,
-                'to_status' => $this->order->status,
-                'notes' => 'Pembayaran diterima: Rp'.number_format($this->payment_amount, 0, ',', '.')." ({$this->payment_method}).",
-            ]);
-        });
+        $noteText = $this->payment_notes ? " - Catatan: {$this->payment_notes}" : '';
+        $this->order->histories()->create([
+            'store_id' => $this->order->store_id,
+            'user_id' => Auth::id(),
+            'from_status' => $this->order->status,
+            'to_status' => $this->order->status,
+            'notes' => 'Pembayaran diterima: Rp. '.number_format($this->payment_amount, 0, ',', '.')." ({$this->payment_method}){$noteText}.",
+        ]);
 
         $this->showPaymentModal = false;
+        $this->payment_notes = '';
+        $this->order->load(['payments.user', 'histories.user']);
         $this->payment_amount = $this->order->remaining_balance;
 
         $this->dispatch('toast', [

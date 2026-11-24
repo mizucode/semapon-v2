@@ -1,4 +1,4 @@
-<div class="space-y-6" x-data="{ showPrintBlockedModal: false, showEditWarningModal: false }">
+<div class="flex flex-col gap-6" x-data="{ showPrintBlockedModal: false, showEditWarningModal: false, showDeleteOrderModal: false }">
     <!-- Flash Success Notification -->
     @if (session()->has('success'))
         <div
@@ -57,21 +57,6 @@
                         Tersalin!
                     </span>
                 </div>
-
-                <!-- Payment Status Badge (Hanya tampil jika ada status pembayaran pasti) -->
-                @if ($order->payment_status === 'paid')
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500 text-white shadow-xs">
-                        LUNAS
-                    </span>
-                @elseif ($order->payment_status === 'partially_paid')
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-amber-500 text-white shadow-xs">
-                        DP TERCATAT
-                    </span>
-                @elseif (!$order->is_cost_undetermined)
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-rose-500 text-white shadow-xs">
-                        BELUM BAYAR
-                    </span>
-                @endif
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
@@ -174,64 +159,7 @@
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <!-- Quick Advance Next Step (If normal flow) -->
-            @if ($order->status === 'diagnosing')
-                <button
-                    type="button"
-                    wire:click="advanceStatus('in_progress', 'Diagnosa selesai, mulai pengerjaan.')"
-                    class="w-full sm:w-auto h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0 gap-1.5"
-                >
-                    <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
-                    <span>Mulai Pengerjaan</span>
-                </button>
-            @elseif ($order->status === 'waiting_approval')
-                <button
-                    type="button"
-                    wire:click="advanceStatus('in_progress', 'Pelanggan telah menyetujui estimasi biaya.')"
-                    class="w-full sm:w-auto h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0 gap-1.5"
-                >
-                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                    <span>Pelanggan Setuju</span>
-                </button>
-            @elseif ($order->status === 'in_progress')
-                <button
-                    type="button"
-                    wire:click="advanceStatus('testing', 'Perbaikan selesai, masuk ke tahap QC & pengujian fungsi.')"
-                    class="w-full sm:w-auto h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0 gap-1.5"
-                >
-                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
-                    <span>Uji Fungsi (QC)</span>
-                </button>
-            @elseif ($order->status === 'waiting_parts')
-                <button
-                    type="button"
-                    wire:click="advanceStatus('in_progress', 'Sparepart telah tiba, melanjutkan servis.')"
-                    class="w-full sm:w-auto h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0 gap-1.5"
-                >
-                    <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
-                    <span>Sparepart Ada (Lanjut)</span>
-                </button>
-            @elseif ($order->status === 'testing')
-                <button
-                    type="button"
-                    wire:click="advanceStatus('ready_for_pickup', 'Semua uji fungsi lolos. Gadget siap diserahkan ke pelanggan.')"
-                    class="w-full sm:w-auto h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0 gap-1.5"
-                >
-                    <i data-lucide="bell" class="w-3.5 h-3.5"></i>
-                    <span>QC Lolos (Siap Diambil)</span>
-                </button>
-            @elseif ($order->status === 'ready_for_pickup')
-                <button
-                    type="button"
-                    wire:click="advanceStatus('completed', 'Unit telah diserahkan dan diterima oleh pelanggan.')"
-                    class="w-full sm:w-auto h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-green-700 hover:bg-green-800 rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer inline-flex items-center justify-center whitespace-nowrap shrink-0 gap-1.5"
-                >
-                    <i data-lucide="award" class="w-3.5 h-3.5"></i>
-                    <span>Unit Diambil (Selesai)</span>
-                </button>
-            @endif
-
+        <div class="flex items-center gap-2 w-full md:w-auto">
             <!-- Dynamic Action: Perbarui Status -->
             <button
                 type="button"
@@ -244,10 +172,37 @@
         </div>
     </div>
 
+    <!-- Kelola Order (Edit & Hapus) - Mobile Only (Tampil di bawah section status) -->
+    <div class="lg:hidden bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+        <div class="pb-2.5 border-b border-slate-100">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Kelola Order</h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+            <button
+                type="button"
+                @click="showEditWarningModal = true"
+                class="w-full h-10 px-3 text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
+            >
+                <i data-lucide="edit-3" class="w-4 h-4 text-slate-500"></i>
+                <span>Edit Order</span>
+            </button>
+
+            <button
+                type="button"
+                @click="showDeleteOrderModal = true"
+                class="w-full h-10 px-3 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
+            >
+                <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+                <span>Hapus Order</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left 1 Col: Customer & Device Overview -->
-        <div class="space-y-6">
+        <div class="flex flex-col gap-6">
             <!-- Customer Card -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -378,7 +333,45 @@
                 </div>
 
                 <!-- Physical Checklist Summary -->
-                @if (is_array($order->physical_condition_checklist) && count($order->physical_condition_checklist) > 0)
+                @php
+                    $physicalCond = $order->physical_condition ?? [];
+                    $physicalLabels = [
+                        'screen_condition' => 'Kaca Layar',
+                        'lcd_condition' => 'Tampilan LCD',
+                        'body_condition' => 'Bodi / Backdoor',
+                        'camera_condition' => 'Kamera Depan/Belakang',
+                        'buttons_condition' => 'Tombol Fisik',
+                        'charging_condition' => 'Port Charger',
+                    ];
+                @endphp
+                @if (is_array($physicalCond) && count($physicalCond) > 0)
+                    <div class="pt-3 border-t border-slate-100">
+                        <span class="text-xs font-semibold text-slate-900 block mb-2.5">Checklist Kondisi Fisik Saat Masuk</span>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            @foreach ($physicalCond as $itemKey => $itemVal)
+                                @if (!empty($itemVal))
+                                    @php
+                                        $isMatot = str_contains($itemVal, 'Matot');
+                                        $isNormal = in_array(strtolower($itemVal), ['normal', 'mulus', 'normal mulus', 'normal jernih', 'normal empuk', 'normal kencang']);
+                                        $isWarning = $isMatot || str_contains(strtolower($itemVal), 'pecah') || str_contains(strtolower($itemVal), 'mati') || str_contains(strtolower($itemVal), 'rusak');
+                                    @endphp
+                                    <div class="p-2 rounded-xl border {{ $isMatot ? 'bg-amber-50/60 border-amber-200' : ($isWarning ? 'bg-rose-50/60 border-rose-200' : ($isNormal ? 'bg-emerald-50/40 border-emerald-100' : 'bg-slate-50 border-slate-200')) }}">
+                                        <span class="text-3xs font-medium text-slate-500 block leading-tight">{{ $physicalLabels[$itemKey] ?? ucwords(str_replace('_', ' ', $itemKey)) }}</span>
+                                        <span class="text-xs font-semibold {{ $isMatot ? 'text-amber-800' : ($isWarning ? 'text-rose-700' : ($isNormal ? 'text-emerald-700' : 'text-slate-800')) }} block mt-0.5 truncate" title="{{ $itemVal }}">
+                                            @if($isMatot)
+                                                ⚡ {{ $itemVal }}
+                                            @elseif($isNormal)
+                                                ✓ {{ $itemVal }}
+                                            @else
+                                                • {{ $itemVal }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @elseif (is_array($order->physical_condition_checklist) && count($order->physical_condition_checklist) > 0)
                     <div class="pt-3 border-t border-slate-100">
                         <span class="text-xs font-medium text-slate-900 block mb-2">Kondisi Fisik Saat Diterima</span>
                         <div class="grid grid-cols-2 gap-1.5">
@@ -527,35 +520,41 @@
 
             <!-- Technician Card -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Teknisi Bertugas</span>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-base font-bold text-slate-900">Teknisi Bertugas</h3>
                     <button
                         type="button"
                         wire:click="$set('showAssignTechModal', true)"
-                        class="text-2xs font-semibold text-primary-600 hover:underline"
+                        class="text-2xs font-semibold text-primary-600 hover:underline cursor-pointer"
                     >
                         Ganti Teknisi
                     </button>
                 </div>
 
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm">
-                        {{ strtoupper(substr($order->technician?->name ?? 'A', 0, 2)) }}
+                @if ($order->technician)
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm">
+                            {{ strtoupper(substr($order->technician->name, 0, 2)) }}
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900">{{ $order->technician->name }}</h2>
+                            <p class="text-2xs text-slate-500">{{ $order->technician->email }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="text-sm font-bold text-slate-900">{{ $order->technician?->name ?? 'Antrean Terbuka' }}</h2>
-                        <p class="text-2xs text-slate-500">{{ $order->technician?->email ?? 'Belum ada teknisi spesifik' }}</p>
+                @else
+                    <div class="py-2.5 text-center text-slate-400 text-xs font-normal">
+                        Belum ada teknisi yang ditugaskan. Klik tombol "Ganti Teknisi" di atas.
                     </div>
-                </div>
+                @endif
             </div>
 
-            <!-- Kelola Order (Edit & Hapus) -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+            <!-- Kelola Order (Edit & Hapus) - Desktop Only -->
+            <div class="hidden lg:block bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
                 <div class="pb-3 border-b border-slate-100">
                     <h3 class="text-base font-bold text-slate-900">Kelola Order</h3>
                 </div>
 
-                <div class="flex flex-col sm:flex-row lg:flex-col gap-2.5">
+                <div class="flex flex-col gap-2.5">
                     <button
                         type="button"
                         @click="showEditWarningModal = true"
@@ -567,8 +566,7 @@
 
                     <button
                         type="button"
-                        wire:click="deleteOrder"
-                        wire:confirm="Yakin ingin menghapus order #{{ $order->order_number }} secara permanen? Seluruh riwayat dan data servis akan dihapus."
+                        @click="showDeleteOrderModal = true"
                         class="w-full h-10 px-4 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
                     >
                         <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
@@ -579,7 +577,7 @@
         </div>
 
         <!-- Right 2 Cols: Services & Cost Breakdown, Diagnosis, Timeline -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 flex flex-col gap-6">
             <!-- Billing & Items Card -->
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
@@ -590,10 +588,10 @@
                         <button
                             type="button"
                             wire:click="openAddItemModal"
-                            class="h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap shrink-0 cursor-pointer"
+                            class="h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap shrink-0 cursor-pointer gap-1.5"
                         >
-                            <i data-lucide="plus" class="w-3.5 h-3.5 mr-1.5 shrink-0"></i>
-                            <span>Tambah Biaya / Jasa</span>
+                            <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+                            <span>Tambah Biaya</span>
                         </button>
                     </div>
                 </div>
@@ -608,24 +606,41 @@
                                 <th class="py-2.5 px-3 text-center w-16">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-100 border-b border-slate-100">
                             @forelse ($order->items as $item)
                                 <tr class="hover:bg-slate-50/60">
                                     <td class="py-3 px-3 font-medium text-slate-800">
                                         {{ $item->name }}
-                                        @if ($item->service)
-                                            <span class="block text-2xs text-slate-400">Dari Katalog: {{ $item->service->category?->name ?? 'Umum' }}</span>
-                                        @endif
                                     </td>
                                     <td class="py-3 px-3 text-right font-semibold text-slate-900">
-                                        Rp{{ number_format($item->price, 0, ',', '.') }}
+                                        Rp. {{ number_format($item->price, 0, ',', '.') }}
                                     </td>
                                     <td class="py-3 px-3 text-center">
                                         <button
                                             type="button"
-                                            wire:click="removeItem('{{ $item->id }}')"
-                                            wire:confirm="Hapus item biaya ini?"
-                                            class="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                                            @click="
+                                                Swal.fire({
+                                                    title: 'Hapus Item Biaya?',
+                                                    text: 'Hapus \'{{ addslashes($item->name) }}\' dari rincian biaya servis?',
+                                                    icon: 'warning',
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#e11d48',
+                                                    cancelButtonColor: '#64748b',
+                                                    confirmButtonText: 'Ya, Hapus',
+                                                    cancelButtonText: 'Batal',
+                                                    reverseButtons: true,
+                                                    customClass: {
+                                                        popup: 'rounded-2xl shadow-xl',
+                                                        confirmButton: 'rounded-xl text-xs sm:text-sm font-semibold px-4 py-2.5',
+                                                        cancelButton: 'rounded-xl text-xs sm:text-sm font-semibold px-4 py-2.5'
+                                                    }
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        $wire.removeItem('{{ $item->id }}');
+                                                    }
+                                                })
+                                            "
+                                            class="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                                             title="Hapus item"
                                         >
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -634,8 +649,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="py-6 text-center text-slate-400 italic">
-                                        Belum ada rincian biaya yang ditambahkan. Klik tombol "+ Tambah Biaya / Jasa" di atas.
+                                    <td colspan="3" class="py-12 text-center text-slate-400 text-xs font-normal">
+                                        Belum ada rincian biaya yang ditambahkan. Klik tombol "+ Tambah Biaya" di atas.
                                     </td>
                                 </tr>
                             @endforelse
@@ -644,56 +659,70 @@
                 </div>
 
                 <!-- Cost Summary Footer -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 text-xs">
-                    @if ($order->is_cost_undetermined && $order->items->isEmpty())
-                        <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 mb-2">
-                            <span class="block text-2xs uppercase tracking-wider font-bold text-amber-700">Biaya Belum Ditentukan</span>
-                            <p class="text-xs font-semibold mt-0.5">Menunggu Diagnosa Teknisi</p>
-                            <p class="text-[11px] text-amber-700 mt-1">Biaya awal unit ini belum ditentukan (misal: kondisi mati total / butuh pengecekan jalur board). Setelah diagnosa selesai, silakan tambah rincian jasa/sparepart di atas.</p>
-                        </div>
-                    @endif
-                    <div class="flex justify-between text-slate-600">
-                        <span>Total Biaya Servis:</span>
-                        <span class="font-bold text-slate-900 text-sm">
-                            @if ($order->is_cost_undetermined && $order->items->isEmpty())
-                                <span class="italic text-xs font-normal text-amber-700">Menunggu Diagnosa</span>
-                            @else
-                                Rp{{ number_format($order->total_cost, 0, ',', '.') }}
-                            @endif
-                        </span>
-                    </div>
-                    <div class="flex justify-between text-slate-600">
-                        <span>Uang Masuk / Pembayaran Diterima:</span>
-                        <span class="font-semibold text-emerald-700">Rp{{ number_format($order->paid_amount, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex justify-between text-slate-800 pt-2 border-t border-slate-200">
-                        <span class="font-bold">Sisa Tagihan:</span>
-                        @if ($order->is_cost_undetermined && $order->items->isEmpty())
-                            <span class="italic text-xs font-medium text-slate-500">Menyusul setelah diagnosa</span>
-                        @else
-                            <span class="font-bold text-sm {{ $order->remaining_balance > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
-                                {{ $order->remaining_balance > 0 ? 'Rp' . number_format($order->remaining_balance, 0, ',', '.') : 'Lunas (Rp0)' }}
+                @if ($order->items->isNotEmpty())
+                    <div class="!mt-8 sm:!mt-10 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200/80 space-y-2.5 text-xs shadow-2xs">
+                        <div class="flex justify-between items-center text-slate-600">
+                            <span>Total Biaya Servis:</span>
+                            <span class="font-bold text-slate-900 text-sm">
+                                Rp. {{ number_format($order->total_cost, 0, ',', '.') }}
                             </span>
-                        @endif
-                    </div>
-                    @if ($order->warranty_days > 0)
-                        <div class="text-2xs text-slate-500 pt-1 flex items-center justify-between">
-                            <span>Masa Garansi Toko:</span>
-                            <span class="font-semibold text-slate-700">{{ $order->warranty_days }} Hari {{ $order->warranty_until ? '(s/d ' . \Carbon\Carbon::parse($order->warranty_until)->format('d M Y') . ')' : '' }}</span>
                         </div>
-                    @endif
+                        @if (($order->paid_amount ?? 0) > 0)
+                            <div class="space-y-1.5">
+                                <div class="flex justify-between items-center text-slate-600">
+                                    <span>Pembayaran Diterima:</span>
+                                    <span class="font-bold text-emerald-700 text-sm">Rp. {{ number_format($order->paid_amount, 0, ',', '.') }}</span>
+                                </div>
+                                @if ($order->payments->isNotEmpty())
+                                    <div class="bg-slate-50 border border-slate-200/70 rounded-lg p-2.5 space-y-1 text-2xs">
+                                        <div class="font-semibold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Riwayat Pembayaran:</div>
+                                        @foreach ($order->payments as $pmt)
+                                            <div class="flex items-center justify-between text-slate-600">
+                                                <div class="flex items-center gap-1.5 truncate">
+                                                    <span class="text-slate-400">{{ $pmt->created_at->format('d/m/Y') }}</span>
+                                                    <span class="font-medium text-slate-700 truncate">{{ $pmt->notes ?: ($pmt->type === 'dp' ? 'Uang Muka (DP)' : 'Pembayaran') }}</span>
+                                                    <span class="text-[10px] px-1 py-0.2 bg-slate-200 text-slate-600 rounded uppercase">{{ $pmt->payment_method }}</span>
+                                                </div>
+                                                <span class="font-semibold text-emerald-600 shrink-0">+Rp. {{ number_format($pmt->amount, 0, ',', '.') }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                        <div class="flex justify-between text-slate-800 pt-2 border-t border-slate-200">
+                            <span class="font-bold">Sisa Tagihan:</span>
+                            <span class="font-bold text-sm {{ $order->remaining_balance > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                                {{ $order->remaining_balance > 0 ? 'Rp. ' . number_format($order->remaining_balance, 0, ',', '.') : 'Lunas (Rp. 0)' }}
+                            </span>
+                        </div>
+                        @if ($order->overpaid_amount > 0)
+                            <div class="flex justify-between items-center text-slate-800 pt-2 border-t border-slate-200">
+                                <span class="font-bold text-amber-700">Kembalian:</span>
+                                <span class="font-bold text-sm text-amber-700">
+                                    Rp. {{ number_format($order->overpaid_amount, 0, ',', '.') }}
+                                </span>
+                            </div>
+                        @endif
+                        @if ($order->warranty_days > 0)
+                            <div class="text-2xs text-slate-500 pt-1 flex items-center justify-between">
+                                <span>Masa Garansi Toko:</span>
+                                <span class="font-semibold text-slate-700">{{ $order->warranty_days }} Hari {{ $order->warranty_until ? '(s/d ' . \Carbon\Carbon::parse($order->warranty_until)->format('d M Y') . ')' : '' }}</span>
+                            </div>
+                        @endif
 
-                    <div class="pt-2 border-t border-slate-200 flex justify-end">
-                        <button
-                            type="button"
-                            wire:click="$set('showPaymentModal', true)"
-                            class="w-full sm:w-auto h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition-colors inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-1.5"
-                        >
-                            <i data-lucide="credit-card" class="w-3.5 h-3.5 shrink-0"></i>
-                            <span>Catat Pembayaran</span>
-                        </button>
+                        <div class="pt-2 border-t border-slate-200 flex justify-end">
+                            <button
+                                type="button"
+                                wire:click="$set('showPaymentModal', true)"
+                                class="w-full sm:w-auto h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition-colors inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-1.5"
+                            >
+                                <i data-lucide="credit-card" class="w-3.5 h-3.5 shrink-0"></i>
+                                <span>Catat Pembayaran</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
 
             <!-- Diagnosis & Inspection Card -->
@@ -759,39 +788,19 @@
 
             <!-- History Timeline Log -->
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Riwayat & Log Aktivitas</h2>
-                        <p class="text-xs text-slate-500">Jejak kronologis status, tindakan teknisi, dan catatan pengerjaan.</p>
-                    </div>
-                    <button
-                        type="button"
-                        wire:click="openUpdateStatusModal"
-                        class="h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap shrink-0 cursor-pointer"
-                    >
-                        <i data-lucide="plus" class="w-3.5 h-3.5 mr-1.5 shrink-0"></i>
-                        <span>Update Status / Catatan</span>
-                    </button>
+                <div class="pb-3 border-b border-slate-100">
+                    <h2 class="text-base font-bold text-slate-900">Riwayat & Log Aktivitas</h2>
                 </div>
 
-                <div class="relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                <div class="relative pl-7 space-y-5 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
                     @forelse ($order->histories->sortByDesc('created_at') as $history)
                         <div class="relative text-xs">
-                            <div class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
+                            <div class="absolute -left-4 top-1 w-3 h-3 -translate-x-1/2 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
                             <div class="flex items-center justify-between gap-2">
-                                <div class="flex items-center space-x-1.5 flex-wrap">
-                                    <span class="font-bold text-slate-800">
-                                        {{ $history->user?->name ?? 'Sistem' }}
-                                    </span>
-                                    @if ($history->from_status !== $history->to_status)
-                                        <span class="text-2xs font-medium text-slate-500 inline-flex items-center gap-1">
-                                            <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-semibold text-[10px]">{{ $statusLabels[$history->from_status] ?? ucfirst(str_replace('_', ' ', $history->from_status)) }}</span>
-                                            <span>→</span>
-                                            <span class="px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded font-semibold text-[10px]">{{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}</span>
-                                        </span>
-                                    @endif
-                                </div>
-                                <span class="text-3xs text-slate-400 whitespace-nowrap" title="{{ $history->created_at->format('d/m/Y H:i') }}">
+                                <span class="font-bold text-slate-800">
+                                    {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}
+                                </span>
+                                <span class="text-3xs text-slate-400 whitespace-nowrap" title="{{ $history->created_at->isoFormat('D MMMM Y, HH:mm') }} WIB{{ $history->user ? ' (oleh ' . $history->user->name . ')' : '' }}">
                                     {{ $history->created_at->diffForHumans() }}
                                 </span>
                             </div>
@@ -830,7 +839,7 @@
                         >
                             <option value="">-- Ketik Bebas / Custom --</option>
                             @foreach ($availableServices as $srv)
-                                <option value="{{ $srv->id }}">{{ $srv->name }} (Rp{{ number_format($srv->price, 0, ',', '.') }})</option>
+                                <option value="{{ $srv->id }}">{{ $srv->name }} (Rp. {{ number_format($srv->price, 0, ',', '.') }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -882,7 +891,7 @@
     <!-- Modal: Record Payment -->
     @if ($showPaymentModal)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-200">
+            <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h2 class="text-base font-bold text-slate-900">Catat Penerimaan Pembayaran</h2>
                     <button wire:click="$set('showPaymentModal', false)" class="text-slate-400 hover:text-slate-600">
@@ -890,11 +899,60 @@
                     </button>
                 </div>
 
-                <div class="space-y-3 text-xs">
+                <div class="space-y-3.5 text-xs">
                     <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex justify-between items-center">
                         <span class="text-slate-600">Sisa Tagihan Saat Ini:</span>
-                        <span class="font-bold text-slate-900 text-sm">Rp{{ number_format($order->remaining_balance, 0, ',', '.') }}</span>
+                        <span class="font-bold text-slate-900 text-sm">Rp. {{ number_format($order->remaining_balance, 0, ',', '.') }}</span>
                     </div>
+
+                    @if ($order->overpaid_amount > 0)
+                        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200/80 flex justify-between items-center">
+                            <span class="text-amber-800 font-semibold">Kembalian:</span>
+                            <span class="font-bold text-amber-800 text-sm">Rp. {{ number_format($order->overpaid_amount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
+
+                    @if ($order->payments->isNotEmpty() || ($order->paid_amount ?? 0) > 0)
+                        <div class="border border-slate-200/80 rounded-xl p-3 bg-slate-50/60 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-700 text-2xs uppercase tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="history" class="w-3.5 h-3.5 text-slate-500"></i>
+                                    Riwayat Pembayaran Sebelumnya
+                                </span>
+                                <span class="text-2xs font-semibold text-emerald-700">Total: Rp. {{ number_format($order->paid_amount, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="space-y-1.5 max-h-36 overflow-y-auto divide-y divide-slate-100 pr-0.5">
+                                @forelse ($order->payments as $pmt)
+                                    <div class="pt-1.5 first:pt-0 flex items-center justify-between text-2xs">
+                                        <div class="space-y-0.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-semibold text-slate-800">{{ $pmt->created_at->format('d/m/Y H:i') }}</span>
+                                                <span class="px-1.5 py-0.2 rounded text-[10px] font-medium uppercase bg-slate-200 text-slate-700">{{ $pmt->payment_method }}</span>
+                                                @if ($pmt->type === 'dp')
+                                                    <span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-amber-100 text-amber-800">DP</span>
+                                                @endif
+                                            </div>
+                                            <div class="text-slate-500 truncate max-w-[240px]">
+                                                {{ $pmt->notes ?: ($pmt->type === 'dp' ? 'Uang Muka (DP)' : 'Tanpa keterangan') }}
+                                                @if ($pmt->user)
+                                                    <span class="text-slate-400"> • Kasir: {{ $pmt->user->name }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <span class="font-bold text-emerald-600 whitespace-nowrap">+Rp. {{ number_format($pmt->amount, 0, ',', '.') }}</span>
+                                    </div>
+                                @empty
+                                    <div class="flex items-center justify-between text-2xs">
+                                        <div class="space-y-0.5">
+                                            <span class="font-semibold text-slate-800">Pembayaran Awal / DP</span>
+                                            <div class="text-slate-500">Tercatat saat pembuatan order</div>
+                                        </div>
+                                        <span class="font-bold text-emerald-600">+Rp. {{ number_format($order->paid_amount, 0, ',', '.') }}</span>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    @endif
 
                     <div>
                         <label class="block font-medium text-slate-700 mb-1">Nominal Pembayaran Diterima (Rp) <span class="text-rose-500">*</span></label>
@@ -918,6 +976,53 @@
                             <option value="qris">QRIS</option>
                         </select>
                     </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block font-medium text-slate-700">Keterangan / Catatan Pembayaran</label>
+                            <span class="text-2xs text-slate-400">Pilih cepat:</span>
+                        </div>
+
+                        <!-- Quick Tags -->
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <button
+                                type="button"
+                                wire:click="$set('payment_notes', 'Uang Muka (DP)')"
+                                class="px-2 py-0.5 text-2xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+                            >
+                                Uang Muka (DP)
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('payment_notes', 'Pelunasan Servis')"
+                                class="px-2 py-0.5 text-2xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+                            >
+                                Pelunasan Servis
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('payment_notes', 'Cicilan / Tambahan Pembayaran')"
+                                class="px-2 py-0.5 text-2xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+                            >
+                                Cicilan
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('payment_notes', 'Biaya Sparepart')"
+                                class="px-2 py-0.5 text-2xs rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
+                            >
+                                Biaya Sparepart
+                            </button>
+                        </div>
+
+                        <textarea
+                            wire:model="payment_notes"
+                            rows="2"
+                            placeholder="Misal: Uang Muka (DP) dari pelanggan, atau catatan bukti transfer..."
+                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
+                        ></textarea>
+                        @error('payment_notes') <span class="text-rose-500 text-2xs block mt-1">{{ $message }}</span> @enderror
+                    </div>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -931,9 +1036,11 @@
                     <button
                         type="button"
                         wire:click="recordPayment"
-                        class="h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+                        class="h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap gap-1.5"
                     >
-                        Simpan Pembayaran
+                        <i data-lucide="loader-circle" wire:loading wire:target="recordPayment" class="animate-spin w-4 h-4"></i>
+                        <span wire:loading.remove wire:target="recordPayment">Simpan Pembayaran</span>
+                        <span wire:loading wire:target="recordPayment">Menyimpan...</span>
                     </button>
                 </div>
             </div>
@@ -1279,6 +1386,87 @@
                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                         <span>Lanjutkan Edit Order</span>
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Dialog: Konfirmasi Hapus Order Secara Permanen --}}
+    <div
+        x-show="showDeleteOrderModal"
+        x-cloak
+        class="fixed inset-0 z-50 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+    >
+        <!-- Backdrop -->
+        <div
+            x-show="showDeleteOrderModal"
+            x-transition:enter="ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            @click="showDeleteOrderModal = false"
+        ></div>
+
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div
+                x-show="showDeleteOrderModal"
+                x-transition:enter="ease-out duration-200"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg p-6 border border-slate-100 space-y-4"
+                @click.away="showDeleteOrderModal = false"
+            >
+                <div class="flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                        <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Konfirmasi Penghapusan Order</h3>
+                        <p class="text-xs text-slate-500">Order ID: #{{ $order->order_number }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-rose-50/70 border border-rose-200/80 rounded-xl p-3.5 text-xs text-rose-900 leading-relaxed space-y-2">
+                    <p class="font-semibold text-rose-950">
+                        Peringatan: Tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+                    </p>
+                    <ul class="space-y-1.5 list-disc list-inside text-rose-900">
+                        <li><strong>Pencatatan Transaksi:</strong> Order ini akan dihapus dari daftar transaksi servis, rekapan keuangan, dan mutasi kas toko.</li>
+                        <li><strong>Riwayat & Dokumentasi:</strong> Seluruh riwayat diagnosa teknisi, checklist kondisi fisik, catatan keluhan, dan foto unit akan terhapus.</li>
+                        <li><strong>Nota & Tracking Publik:</strong> Akses tracking online pelanggan akan dinonaktifkan dan tanda terima servis tidak lagi valid.</li>
+                    </ul>
+                </div>
+
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus data servis ini dari sistem secara permanen?
+                </p>
+
+                <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button
+                        type="button"
+                        @click="showDeleteOrderModal = false"
+                        class="w-full sm:w-auto h-10 px-4 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="deleteOrder"
+                        class="w-full sm:w-auto h-10 px-5 text-xs sm:text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                        <i data-lucide="loader-circle" wire:loading wire:target="deleteOrder" class="animate-spin w-4 h-4"></i>
+                        <i data-lucide="trash-2" wire:loading.remove wire:target="deleteOrder" class="w-4 h-4"></i>
+                        <span wire:loading.remove wire:target="deleteOrder">Ya, Hapus Permanen</span>
+                        <span wire:loading wire:target="deleteOrder">Menghapus...</span>
+                    </button>
                 </div>
             </div>
         </div>

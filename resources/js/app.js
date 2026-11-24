@@ -1,7 +1,10 @@
 import { createIcons, icons } from 'lucide';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 window.createIcons = createIcons;
 window.lucideIcons = icons;
+window.Swal = Swal;
 
 let lucideRaf = null;
 const initLucide = () => {

@@ -218,11 +218,14 @@
 
                         <!-- 3. Alamat Pelanggan -->
                         <div class="sm:col-span-2">
-                            <label for="c_address" class="block text-sm font-semibold text-slate-800 mb-2">Alamat Pelanggan (Opsional)</label>
+                            <label for="c_address" class="block text-sm font-semibold text-slate-800 mb-2">
+                                Alamat Pelanggan <span class="text-rose-500">*</span>
+                            </label>
                             <textarea
                                 wire:model="customer_address"
                                 id="c_address"
                                 rows="2"
+                                :required="mode === 'new'"
                                 placeholder="Contoh: Jl. Diponegoro No. 15, RT 03/RW 02..."
                                 class="block w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
                             ></textarea>
@@ -402,14 +405,14 @@
                         @error('device_model') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <!-- Nomor IMEI / SN (Opsional) -->
+                    <!-- Nomor IMEI / SN -->
                     <div>
-                        <label for="d_imei" class="block text-sm font-semibold text-slate-800 mb-2">Nomor IMEI / SN <span class="text-xs font-normal text-slate-400">(Opsional)</span></label>
+                        <label for="d_imei" class="block text-sm font-semibold text-slate-800 mb-2">Nomor IMEI / SN</label>
                         <input
                             wire:model="device_imei"
                             type="text"
                             id="d_imei"
-                            placeholder="15 Digit IMEI unit (opsional)..."
+                            placeholder="15 Digit IMEI unit..."
                             class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
                         >
                         @error('device_imei') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
@@ -519,6 +522,38 @@
 
         <!-- Checklist Kondisi Fisik Saat Masuk -->
         <x-card title="Checklist Kondisi Fisik Awal" subtitle="Catatan kondisi sebelum unit dikerjakan untuk perlindungan konter dan transparansi">
+            <x-slot:action>
+                <div class="flex items-center gap-1.5">
+                    <button
+                        type="button"
+                        @click="
+                            $wire.set('physical_condition.lcd_condition', 'Tidak Bisa Dicek (Matot)');
+                            $wire.set('physical_condition.camera_condition', 'Tidak Bisa Dicek (Matot)');
+                            $wire.set('physical_condition.buttons_condition', 'Tidak Bisa Ditest (Matot)');
+                            $wire.set('physical_condition.charging_condition', 'Tidak Merespons (Matot)');
+                        "
+                        class="px-2.5 py-1 text-2xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        title="Otomatis tandai komponen internal yang tidak bisa dites karena HP mati total"
+                    >
+                        <i data-lucide="zap-off" class="w-3.5 h-3.5 text-amber-600"></i>
+                        <span>⚡ Set Kondisi HP Matot</span>
+                    </button>
+                    <button
+                        type="button"
+                        @click="
+                            $wire.set('physical_condition.lcd_condition', 'Normal');
+                            $wire.set('physical_condition.camera_condition', 'Normal');
+                            $wire.set('physical_condition.buttons_condition', 'Normal');
+                            $wire.set('physical_condition.charging_condition', 'Normal');
+                        "
+                        class="px-2 py-1 text-2xs font-medium rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
+                        title="Reset kembali ke kondisi normal"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </x-slot:action>
+
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-5 sm:gap-y-6">
                 <div>
                     <label class="block text-sm font-semibold text-slate-800 mb-2">Kaca Layar</label>
@@ -540,6 +575,7 @@
                         wire:model="physical_condition.lcd_condition"
                         :options="[
                             'Normal' => 'Normal Jernih',
+                            'Tidak Bisa Dicek (Matot)' => 'Tidak Bisa Dicek (Matot)',
                             'Bergaris' => 'Bergaris',
                             'Ada Tompel / Dot' => 'Ada Tompel / Dot',
                             'Blank Hitam' => 'Blank Total',
@@ -568,6 +604,7 @@
                         wire:model="physical_condition.camera_condition"
                         :options="[
                             'Normal' => 'Normal Jernih',
+                            'Tidak Bisa Dicek (Matot)' => 'Tidak Bisa Dicek (Matot)',
                             'Buram / Berdebu' => 'Buram / Berdebu',
                             'Kaca Kamera Retak' => 'Kaca Kamera Retak',
                             'Mati / Blank' => 'Mati / Blank',
@@ -582,6 +619,7 @@
                         wire:model="physical_condition.buttons_condition"
                         :options="[
                             'Normal' => 'Normal Empuk',
+                            'Tidak Bisa Ditest (Matot)' => 'Tidak Bisa Ditest (Matot)',
                             'Keras / Mendem' => 'Keras / Mendem',
                             'Mati / Copot' => 'Mati / Copot',
                         ]"
@@ -595,6 +633,7 @@
                         wire:model="physical_condition.charging_condition"
                         :options="[
                             'Normal' => 'Normal Kencang',
+                            'Tidak Merespons (Matot)' => 'Tidak Merespons (Matot)',
                             'Longgar' => 'Longgar',
                             'Patah / Rusak' => 'Patah / Rusak',
                         ]"

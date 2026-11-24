@@ -142,9 +142,23 @@ class ServiceOrder extends Model
         return $this->hasMany(ServiceOrderHistory::class, 'service_order_id')->latest();
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'service_order_id')->latest();
+    }
+
     public function getRemainingBalanceAttribute(): float
     {
         return max(0.0, (float) $this->total_cost - (float) $this->paid_amount);
+    }
+
+    public function getOverpaidAmountAttribute(): float
+    {
+        if ((float) $this->total_cost <= 0) {
+            return 0.0;
+        }
+
+        return max(0.0, (float) $this->paid_amount - (float) $this->total_cost);
     }
 
     public function getComplaintAttribute(): ?string

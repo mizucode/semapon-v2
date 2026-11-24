@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Order;
 
+use App\Models\CashTransaction;
 use App\Models\Customer;
 use App\Models\CustomerDevice;
 use App\Models\DeviceCatalog;
+use App\Models\Payment;
 use App\Models\ServiceOrder;
 use App\Models\TechnicianProfile;
 use App\Services\ImageOptimizer;
@@ -340,6 +342,7 @@ class CreateOrder extends Component
             $this->customer_phone = self::normalizePhoneNumber($this->customer_phone);
             $rules['customer_name'] = ['required', 'string', 'max:255'];
             $rules['customer_phone'] = ['required', 'string', 'regex:/^08[0-9]{8,14}$/'];
+            $rules['customer_address'] = ['required', 'string', 'max:500'];
         }
 
         if (! $this->customer_device_id) {
@@ -349,6 +352,7 @@ class CreateOrder extends Component
 
         $this->validate($rules, [
             'customer_phone.regex' => 'Format nomor WhatsApp / HP harus diawali 08 dan terdiri dari 10-16 digit angka.',
+            'customer_address.required' => 'Alamat pelanggan wajib diisi.',
             'device_brand.required' => 'Merek / Brand smartphone wajib diisi.',
             'device_model.required' => 'Model / Tipe HP wajib diisi.',
         ]);
@@ -460,6 +464,32 @@ class CreateOrder extends Component
                 'to_status' => 'received',
                 'notes' => 'Unit HP diterima di konter.',
             ]);
+
+            // Record initial down payment if provided
+            if ((float) $this->down_payment > 0) {
+                Payment::create([
+                    'store_id' => $store->id,
+                    'service_order_id' => $order->id,
+                    'customer_id' => $customer->id,
+                    'user_id' => Auth::id(),
+                    'amount' => (float) $this->down_payment,
+                    'type' => 'dp',
+                    'payment_method' => 'cash',
+                    'status' => 'success',
+                    'notes' => 'Uang Muka (DP) saat penerimaan unit',
+                ]);
+
+                CashTransaction::create([
+                    'store_id' => $store->id,
+                    'user_id' => Auth::id(),
+                    'type' => 'in',
+                    'category' => 'service_income',
+                    'amount' => (float) $this->down_payment,
+                    'reference_type' => 'service_orders',
+                    'reference_id' => $order->id,
+                    'description' => "Penerimaan DP Order #{$order->order_number} (cash)",
+                ]);
+            }
 
             // 5. Increment customer orders count
             $customer->increment('total_orders_count');

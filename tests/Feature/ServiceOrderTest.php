@@ -247,6 +247,7 @@ test('user can add service items, record payment, and complete order', function 
     Livewire::test(OrderDetail::class, ['id' => $order->id])
         ->set('payment_amount', 250000)
         ->set('payment_method', 'cash')
+        ->set('payment_notes', 'Pelunasan Servis Ganti LCD')
         ->call('recordPayment')
         ->assertHasNoErrors();
 
@@ -254,6 +255,22 @@ test('user can add service items, record payment, and complete order', function 
     expect((float) $order->paid_amount)->toBe(250000.0);
     expect($order->payment_status)->toBe('paid');
     expect($order->remaining_balance)->toBe(0.0);
+    expect($order->payments)->toHaveCount(1);
+    expect($order->payments->first()->notes)->toBe('Pelunasan Servis Ganti LCD');
+
+    // Verify payment history and notes are rendered in order detail
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->assertSee('Pelunasan Servis Ganti LCD')
+        ->assertSee('Riwayat Pembayaran');
+
+    // Test overpayment / kembalian display
+    $order->update(['paid_amount' => 350000]);
+    $order->refresh();
+    expect($order->overpaid_amount)->toBe(100000.0);
+
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->assertSee('Kembalian:')
+        ->assertSee('100.000');
 });
 
 test('user can view printable receipt for order', function () {
@@ -331,6 +348,7 @@ test('user can create a service order with new customer and normalized phone', f
         ->set('customer_mode', 'new')
         ->set('customer_name', 'Andi Pratama')
         ->set('customer_phone', '+6281298765432')
+        ->set('customer_address', 'Jl. Merdeka Barat No. 12')
         ->set('device_brand', 'Samsung')
         ->set('device_model', 'Galaxy A54')
         ->set('device_imei', '861234567890124')
@@ -425,12 +443,29 @@ test('device imei is optional when creating a service order with new device', fu
         ->set('customer_mode', 'new')
         ->set('customer_name', 'Budi Test')
         ->set('customer_phone', '081234567890')
+        ->set('customer_address', 'Jl. Sudirman No. 45')
         ->set('device_brand', 'Xiaomi')
         ->set('device_model', 'Redmi Note 13')
         ->set('device_imei', '')
         ->set('complaints', 'Bootloop')
         ->call('storeOrder')
         ->assertHasNoErrors(['device_imei']);
+});
+
+test('order creation requires customer address for new customer', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    Livewire::test(CreateOrder::class)
+        ->set('customer_mode', 'new')
+        ->set('customer_name', 'Customer Without Address')
+        ->set('customer_phone', '081234567899')
+        ->set('customer_address', '')
+        ->set('device_brand', 'Xiaomi')
+        ->set('device_model', 'Redmi Note 13')
+        ->set('complaints', 'Layar blank')
+        ->call('storeOrder')
+        ->assertHasErrors(['customer_address']);
 });
 
 test('order detail displays disabled print receipt button when order has no items', function () {
@@ -566,8 +601,58 @@ test('user can delete order from order detail', function () {
         ->assertSee('Perhatian: Edit Data Order')
         ->assertSee('Lanjutkan Edit Order')
         ->assertSee('Hapus Order')
+        ->assertSee('Konfirmasi Penghapusan Order')
+        ->assertSee('Pencatatan Transaksi')
+        ->assertSee('Ya, Hapus Permanen')
         ->call('deleteOrder')
         ->assertRedirect(route('orders.index'));
 
     expect(ServiceOrder::find($order->id))->toBeNull();
+});
+
+test('order detail hides cost summary footer when no items or services added', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    $orderNoItems = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Mati total',
+        'created_by' => $this->ownerUser->id,
+        'paid_amount' => 0,
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $orderNoItems->id])
+        ->assertDontSee('Total Biaya Servis:')
+        ->assertDontSee('Sisa Tagihan:')
+        ->assertDontSee('Catat Pembayaran')
+        ->assertDontSee('Pembayaran Diterima:');
+
+    $orderWithItem = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Mati total',
+        'created_by' => $this->ownerUser->id,
+        'paid_amount' => 50000,
+        'total_cost' => 150000,
+    ]);
+
+    $orderWithItem->items()->create([
+        'store_id' => $this->store->id,
+        'item_type' => 'service',
+        'name' => 'Ganti IC Power',
+        'price' => 150000,
+        'subtotal' => 150000,
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $orderWithItem->id])
+        ->assertSee('Total Biaya Servis:')
+        ->assertSee('Sisa Tagihan:')
+        ->assertSee('Catat Pembayaran')
+        ->assertSee('Pembayaran Diterima:')
+        ->assertSee('Rp. 50.000');
 });

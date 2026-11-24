@@ -74,7 +74,108 @@
                 </div>
             </x-card>
 
-            <x-card title="Kustomisasi Nota & Garansi" subtitle="Informasi yang tertera pada nota cetak tanda terima dan struk kasir">
+            <!-- Pengaturan Garansi Toko -->
+            <x-card title="Pengaturan Garansi Toko" subtitle="Konfigurasi masa garansi bawaan serta syarat & ketentuan klaim garansi servis">
+                <div class="space-y-5">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="default_warranty_days" class="block text-xs font-semibold text-slate-700">Masa Garansi Bawaan (Hari)</label>
+                            <span class="text-2xs text-slate-400">Pilih cepat durasi:</span>
+                        </div>
+
+                        <!-- Preset duration buttons -->
+                        <div class="flex flex-wrap gap-1.5 mb-2.5">
+                            <button
+                                type="button"
+                                wire:click="$set('default_warranty_days', 0)"
+                                class="px-2.5 py-1 text-2xs font-medium rounded-lg border transition cursor-pointer {{ $default_warranty_days === 0 ? 'bg-primary-50 border-primary-300 text-primary-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}"
+                            >
+                                0 Hari (Tanpa Garansi)
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('default_warranty_days', 7)"
+                                class="px-2.5 py-1 text-2xs font-medium rounded-lg border transition cursor-pointer {{ $default_warranty_days === 7 ? 'bg-primary-50 border-primary-300 text-primary-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}"
+                            >
+                                7 Hari (1 Minggu)
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('default_warranty_days', 14)"
+                                class="px-2.5 py-1 text-2xs font-medium rounded-lg border transition cursor-pointer {{ $default_warranty_days === 14 ? 'bg-primary-50 border-primary-300 text-primary-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}"
+                            >
+                                14 Hari (2 Minggu)
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('default_warranty_days', 30)"
+                                class="px-2.5 py-1 text-2xs font-medium rounded-lg border transition cursor-pointer {{ $default_warranty_days === 30 ? 'bg-primary-50 border-primary-300 text-primary-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}"
+                            >
+                                30 Hari (1 Bulan)
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('default_warranty_days', 60)"
+                                class="px-2.5 py-1 text-2xs font-medium rounded-lg border transition cursor-pointer {{ $default_warranty_days === 60 ? 'bg-primary-50 border-primary-300 text-primary-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}"
+                            >
+                                60 Hari (2 Bulan)
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="$set('default_warranty_days', 90)"
+                                class="px-2.5 py-1 text-2xs font-medium rounded-lg border transition cursor-pointer {{ $default_warranty_days === 90 ? 'bg-primary-50 border-primary-300 text-primary-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}"
+                            >
+                                90 Hari (3 Bulan)
+                            </button>
+                        </div>
+
+                        <div class="relative">
+                            <input
+                                wire:model="default_warranty_days"
+                                type="number"
+                                id="default_warranty_days"
+                                min="0"
+                                max="365"
+                                placeholder="30"
+                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 font-bold focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors"
+                            >
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">Hari</span>
+                        </div>
+                        @error('default_warranty_days')
+                            <p class="mt-1 text-2xs text-rose-600 font-medium">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-1.5 text-2xs text-slate-400">Masa garansi bawaan yang otomatis diterapkan saat membuat nota order baru atau memilih layanan.</p>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="warranty_terms" class="block text-xs font-semibold text-slate-700">Syarat & Ketentuan Garansi Toko (S&K)</label>
+                            <button
+                                type="button"
+                                wire:click="loadDefaultWarrantyTerms"
+                                class="text-2xs font-semibold text-primary-600 hover:text-primary-700 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                title="Muat template standar ketentuan garansi"
+                            >
+                                <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                                <span>Gunakan Template Standar</span>
+                            </button>
+                        </div>
+                        <textarea
+                            wire:model="warranty_terms"
+                            id="warranty_terms"
+                            rows="5"
+                            placeholder="Tuliskan syarat klaim garansi toko Anda..."
+                            class="block w-full rounded-xl border border-slate-200 p-4 text-xs sm:text-sm text-slate-800 leading-relaxed focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors"
+                        ></textarea>
+                        @error('warranty_terms')
+                            <p class="mt-1 text-2xs text-rose-600 font-medium">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-1.5 text-2xs text-slate-400">Ketentuan ini akan otomatis dicetak pada nota servis pelanggan dan halaman pelacakan status perbaikan online.</p>
+                    </div>
+                </div>
+            </x-card>
+
+            <x-card title="Kustomisasi Cetak Nota & Struk" subtitle="Informasi yang tertera pada nota cetak tanda terima dan struk kasir">
                 <div class="space-y-4">
                     <div>
                         <label for="receipt_header" class="block text-xs font-semibold text-slate-700 mb-1.5">Judul / Header Nota</label>
@@ -98,29 +199,16 @@
                         ></textarea>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="default_warranty_days" class="block text-xs font-semibold text-slate-700 mb-1.5">Garansi Bawaan (Hari)</label>
-                            <input
-                                wire:model="default_warranty_days"
-                                type="number"
-                                id="default_warranty_days"
-                                min="0"
-                                max="365"
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors"
-                            >
-                        </div>
-                        <div>
-                            <label for="thermal_paper_width" class="block text-xs font-semibold text-slate-700 mb-1.5">Ukuran Kertas Thermal Struk</label>
-                            <select
-                                wire:model="thermal_paper_width"
-                                id="thermal_paper_width"
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors"
-                            >
-                                <option value="58">58 mm (Printer Kasir Mini)</option>
-                                <option value="80">80 mm (Printer Standar)</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label for="thermal_paper_width" class="block text-xs font-semibold text-slate-700 mb-1.5">Ukuran Kertas Thermal Struk</label>
+                        <select
+                            wire:model="thermal_paper_width"
+                            id="thermal_paper_width"
+                            class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-colors"
+                        >
+                            <option value="58">58 mm (Printer Kasir Mini)</option>
+                            <option value="80">80 mm (Printer Standar)</option>
+                        </select>
                     </div>
                 </div>
             </x-card>

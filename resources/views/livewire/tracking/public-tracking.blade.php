@@ -287,6 +287,12 @@
                         {{ $order->remaining_balance > 0 ? 'Rp' . number_format($order->remaining_balance, 0, ',', '.') : 'LUNAS (Rp0)' }}
                     </span>
                 </div>
+                @if ($order->overpaid_amount > 0)
+                    <div class="flex justify-between text-amber-700 pt-1.5 font-bold">
+                        <span>Kembalian:</span>
+                        <span>Rp{{ number_format($order->overpaid_amount, 0, ',', '.') }}</span>
+                    </div>
+                @endif
             </div>
 
             @if ($order->warranty_days > 0)
@@ -304,10 +310,10 @@
                     Riwayat Aktivitas & Progres Servis
                 </h2>
 
-                <div class="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                <div class="relative pl-7 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
                     @foreach ($order->histories->sortByDesc('created_at') as $history)
                         <div class="relative text-xs">
-                            <div class="absolute -left-6 top-1 w-2.5 h-2.5 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
+                            <div class="absolute -left-4 top-1 w-3 h-3 -translate-x-1/2 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
                             <div class="flex items-center justify-between gap-2">
                                 <span class="font-bold text-slate-800">
                                     {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}

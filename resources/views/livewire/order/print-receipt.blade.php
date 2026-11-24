@@ -466,11 +466,23 @@
                         </p>
                     @endif
 
-                    <ol class="list-decimal pl-3.5 space-y-0.5 text-left">
-                        <li>Nota asli wajib dibawa saat pengambilan unit.</li>
-                        <li>Barang tidak diambil lebih dari 30 hari di luar tanggung jawab kami.</li>
-                        <li>Garansi gugur jika segel rusak / terkena cairan / human error.</li>
-                    </ol>
+                    @php
+                        $storeWarrantyTerms = trim($order->store?->getSetting('warranty_terms') ?? '');
+                        $warrantyTermsLines = $storeWarrantyTerms ? array_filter(array_map('trim', explode("\n", $storeWarrantyTerms))) : [];
+                    @endphp
+                    @if (!empty($warrantyTermsLines))
+                        <div class="space-y-0.5 text-left text-[9px] leading-tight">
+                            @foreach ($warrantyTermsLines as $termLine)
+                                <p>{{ $termLine }}</p>
+                            @endforeach
+                        </div>
+                    @else
+                        <ol class="list-decimal pl-3.5 space-y-0.5 text-left">
+                            <li>Nota asli wajib dibawa saat pengambilan unit.</li>
+                            <li>Barang tidak diambil lebih dari 30 hari di luar tanggung jawab kami.</li>
+                            <li>Garansi gugur jika segel rusak / terkena cairan / human error.</li>
+                        </ol>
+                    @endif
 
                     <div class="p-2 border border-dashed border-black text-center">
                         <p class="font-bold text-[9.5px] uppercase">Lacak Servis Online</p>
@@ -658,14 +670,26 @@
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-1.5">
                             Ketentuan Servis & Garansi
                         </h3>
-                        <ol class="list-decimal pl-4 space-y-1 text-[11px] text-slate-900 leading-relaxed font-normal">
-                            <li>Nota ini adalah bukti sah kepemilikan saat pengambilan unit.</li>
-                            @if ($warrantyDays > 0)
-                                <li class="font-normal text-slate-900">Garansi toko berlaku {{ $warrantyDays }} hari sejak tanggal
-                                    pengambilan.</li>
-                            @endif
-                            <li>Garansi gugur jika segel rusak atau terjadi kerusakan fisik/cairan baru.</li>
-                        </ol>
+                        @php
+                            $storeWarrantyTerms = trim($order->store?->getSetting('warranty_terms') ?? '');
+                            $warrantyTermsLines = $storeWarrantyTerms ? array_filter(array_map('trim', explode("\n", $storeWarrantyTerms))) : [];
+                        @endphp
+                        @if (!empty($warrantyTermsLines))
+                            <div class="space-y-1 text-[11px] text-slate-900 leading-relaxed font-normal">
+                                @foreach ($warrantyTermsLines as $termLine)
+                                    <p>{{ $termLine }}</p>
+                                @endforeach
+                            </div>
+                        @else
+                            <ol class="list-decimal pl-4 space-y-1 text-[11px] text-slate-900 leading-relaxed font-normal">
+                                <li>Nota ini adalah bukti sah kepemilikan saat pengambilan unit.</li>
+                                @if ($warrantyDays > 0)
+                                    <li class="font-normal text-slate-900">Garansi toko berlaku {{ $warrantyDays }} hari sejak tanggal
+                                        pengambilan.</li>
+                                @endif
+                                <li>Garansi gugur jika segel rusak atau terjadi kerusakan fisik/cairan baru.</li>
+                            </ol>
+                        @endif
 
                         <div class="pt-2">
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-900 block">Lacak Status Servis

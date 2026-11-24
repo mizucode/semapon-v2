@@ -142,6 +142,7 @@ test('owner can update store settings via livewire component', function () {
         ->set('name', 'Konter Berkah Pro')
         ->set('phone', '0899887766')
         ->set('default_warranty_days', 60)
+        ->set('warranty_terms', 'S&K Garansi Toko Khusus')
         ->set('thermal_paper_width', 80)
         ->call('updateStore')
         ->assertDispatched('toast');
@@ -150,5 +151,6 @@ test('owner can update store settings via livewire component', function () {
     expect($store->name)->toBe('Konter Berkah Pro');
     expect($store->phone)->toBe('0899887766');
     expect($store->getSetting('default_warranty_days'))->toBe(60);
+    expect($store->getSetting('warranty_terms'))->toBe('S&K Garansi Toko Khusus');
     expect($store->getSetting('thermal_paper_width'))->toBe(80);
 });

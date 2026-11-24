@@ -29,6 +29,8 @@ class StoreSettings extends Component
 
     public int $default_warranty_days = 30;
 
+    public string $warranty_terms = '';
+
     public int $thermal_paper_width = 58;
 
     public $logo;
@@ -50,6 +52,7 @@ class StoreSettings extends Component
             $this->receipt_header = $store->getSetting('receipt_header', $store->name);
             $this->receipt_footer = $store->getSetting('receipt_footer', 'Terima kasih atas kunjungan Anda.');
             $this->default_warranty_days = (int) $store->getSetting('default_warranty_days', 30);
+            $this->warranty_terms = (string) $store->getSetting('warranty_terms', "1. Garansi berlaku sejak tanggal pengambilan unit sesuai masa yang tertera pada nota.\n2. Garansi hanya mencakup sparepart dan jenis perbaikan yang sama.\n3. Segel garansi toko wajib dalam keadaan utuh (tidak rusak, robek, atau pernah dibongkar).\n4. Garansi tidak berlaku jika terjadi kelalaian pemakaian (terkena air/cairan, jatuh, pecah, terbakar, atau korsleting).\n5. Wajib membawa nota servis fisik atau menunjukkan bukti tracking resmi saat klaim garansi.");
             $this->thermal_paper_width = (int) $store->getSetting('thermal_paper_width', 58);
         }
     }
@@ -67,6 +70,7 @@ class StoreSettings extends Component
             'receipt_header' => ['nullable', 'string', 'max:255'],
             'receipt_footer' => ['nullable', 'string', 'max:500'],
             'default_warranty_days' => ['required', 'integer', 'min:0', 'max:365'],
+            'warranty_terms' => ['nullable', 'string', 'max:2000'],
             'thermal_paper_width' => ['required', 'in:58,80'],
             'logo' => ['nullable', 'image', 'max:2048'], // 2MB Max
         ], [
@@ -89,7 +93,8 @@ class StoreSettings extends Component
             'store_code' => strtoupper($validated['store_code']),
             'receipt_header' => $validated['receipt_header'],
             'receipt_footer' => $validated['receipt_footer'],
-            'default_warranty_days' => $validated['default_warranty_days'],
+            'default_warranty_days' => (int) $validated['default_warranty_days'],
+            'warranty_terms' => $validated['warranty_terms'] ?? '',
             'thermal_paper_width' => (int) $validated['thermal_paper_width'],
         ]);
 
@@ -100,6 +105,11 @@ class StoreSettings extends Component
             'title' => 'Pengaturan Disimpan',
             'message' => 'Profil dan preferensi toko Anda berhasil diperbarui.',
         ]);
+    }
+
+    public function loadDefaultWarrantyTerms(): void
+    {
+        $this->warranty_terms = "1. Garansi berlaku sejak tanggal pengambilan unit sesuai masa yang tertera pada nota.\n2. Garansi hanya mencakup sparepart dan jenis perbaikan yang sama.\n3. Segel garansi toko wajib dalam keadaan utuh (tidak rusak, robek, atau pernah dibongkar).\n4. Garansi tidak berlaku jika terjadi kelalaian pemakaian (terkena air/cairan, jatuh, pecah, terbakar, atau korsleting).\n5. Wajib membawa nota servis fisik atau menunjukkan bukti tracking resmi saat klaim garansi.";
     }
 
     public function render(TenantContext $tenantContext)
