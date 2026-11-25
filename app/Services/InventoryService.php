@@ -147,6 +147,64 @@ class InventoryService
     }
 
     /**
+     * Deduct part stock for a unified service order item without creating a duplicate billing row.
+     */
+    public function deductPartForOrderItem(
+        ServiceOrder $order,
+        Product $product,
+        int $quantity = 1,
+        ?string $userId = null
+    ): ServiceOrderPart {
+        if ($quantity <= 0) {
+            throw new Exception('Jumlah sparepart harus minimal 1.');
+        }
+
+        return DB::transaction(function () use ($order, $product, $quantity, $userId) {
+            /** @var Product $lockedProduct */
+            $lockedProduct = Product::withoutGlobalScopes()
+                ->lockForUpdate()
+                ->findOrFail($product->id);
+
+            if ($lockedProduct->stock < $quantity) {
+                throw new Exception("Stok sparepart '{$lockedProduct->name}' tidak mencukupi (Tersedia: {$lockedProduct->stock} {$lockedProduct->unit}).");
+            }
+
+            $stockBefore = $lockedProduct->stock;
+            $stockAfter = $stockBefore - $quantity;
+
+            $lockedProduct->stock = $stockAfter;
+            $lockedProduct->save();
+
+            StockMovement::create([
+                'store_id' => $lockedProduct->store_id,
+                'product_id' => $lockedProduct->id,
+                'user_id' => $userId,
+                'type' => 'service_usage',
+                'quantity' => $quantity,
+                'stock_before' => $stockBefore,
+                'stock_after' => $stockAfter,
+                'unit_cost' => (float) $lockedProduct->buy_price,
+                'reference_type' => 'service_order',
+                'reference_id' => $order->id,
+                'notes' => "Penggunaan sparepart untuk Order #{$order->order_number}",
+            ]);
+
+            $costPrice = (float) $lockedProduct->buy_price;
+            $sellPrice = (float) $lockedProduct->sell_price;
+
+            return ServiceOrderPart::create([
+                'store_id' => $order->store_id,
+                'service_order_id' => $order->id,
+                'product_id' => $lockedProduct->id,
+                'quantity' => $quantity,
+                'cost_price' => $costPrice,
+                'sell_price' => $sellPrice,
+                'subtotal' => $sellPrice * $quantity,
+            ]);
+        });
+    }
+
+    /**
      * Deduct part from stock for a service order with atomic transaction.
      */
     public function usePartInOrder(
@@ -209,6 +267,7 @@ class InventoryService
             $order->items()->create([
                 'store_id' => $order->store_id,
                 'service_id' => null,
+                'service_order_part_id' => $orderPart->id,
                 'name' => "{$lockedProduct->name} ({$quantity} {$lockedProduct->unit})",
                 'price' => $subtotal,
                 'technician_id' => $order->technician_id,

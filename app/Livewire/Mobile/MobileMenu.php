@@ -20,9 +20,13 @@ class MobileMenu extends Component
         $role = $context->getRole() ?? 'owner';
         $user = Auth::user();
 
+        $isTechnician = $context->isTechnician();
+
         $activeOrdersCount = ServiceOrder::whereIn('status', [
             'received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending',
-        ])->count();
+        ])
+            ->when($isTechnician && $user, fn ($q) => $q->where('technician_id', $user->id))
+            ->count();
 
         $lowStockCount = Product::where('is_active', true)
             ->whereColumn('stock', '<=', 'min_stock')

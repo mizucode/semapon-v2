@@ -150,12 +150,30 @@
             <div class="w-10 h-10 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center shrink-0">
                 <i data-lucide="alert-circle" class="w-5 h-5"></i>
             </div>
-            <div class="flex flex-col justify-center gap-0.5">
-                <span class="text-xs font-bold text-slate-800 leading-tight">Status Pengerjaan Saat Ini</span>
+            <div class="flex flex-col justify-center gap-1">
+                <span class="text-xs font-bold text-slate-900 leading-tight">Status Pengerjaan Saat Ini</span>
                 @php
                     $statusLabel = $statusLabels[$order->status] ?? ($statusOptions[$order->status]['badge'] ?? ucfirst(str_replace('_', ' ', $order->status)));
+                    $currentStatusDotColors = [
+                        'received' => 'bg-blue-600',
+                        'diagnosing' => 'bg-purple-600',
+                        'waiting_approval' => 'bg-amber-500',
+                        'in_progress' => 'bg-indigo-600',
+                        'waiting_parts' => 'bg-orange-500',
+                        'testing' => 'bg-violet-600',
+                        'ready_for_pickup' => 'bg-sky-500',
+                        'completed' => 'bg-emerald-500',
+                        'picked_up' => 'bg-slate-700',
+                        'unrepairable' => 'bg-rose-600',
+                        'cancelled' => 'bg-rose-500',
+                        'pending' => 'bg-amber-500',
+                    ];
+                    $currentDotClass = $currentStatusDotColors[$order->status] ?? 'bg-slate-400';
                 @endphp
-                <span class="text-sm font-semibold text-blue-600 leading-tight">{{ $statusLabel }}</span>
+                <div class="inline-flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $currentDotClass }}"></span>
+                    <span class="text-xs sm:text-sm font-medium text-slate-800 leading-tight">{{ $statusLabel }}</span>
+                </div>
             </div>
         </div>
 
@@ -173,31 +191,33 @@
     </div>
 
     <!-- Kelola Order (Edit & Hapus) - Mobile Only (Tampil di bawah section status) -->
-    <div class="lg:hidden bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-        <div class="pb-2.5 border-b border-slate-100">
-            <h3 class="text-sm sm:text-base font-bold text-slate-900">Kelola Order</h3>
-        </div>
+    @if (!$isTechnician)
+        <div class="lg:hidden bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+            <div class="pb-2.5 border-b border-slate-100">
+                <h3 class="text-sm sm:text-base font-bold text-slate-900">Kelola Order</h3>
+            </div>
 
-        <div class="grid grid-cols-2 gap-2.5">
-            <button
-                type="button"
-                @click="showEditWarningModal = true"
-                class="w-full h-10 px-3 text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
-            >
-                <i data-lucide="edit-3" class="w-4 h-4 text-slate-500"></i>
-                <span>Edit Order</span>
-            </button>
+            <div class="grid grid-cols-2 gap-2.5">
+                <button
+                    type="button"
+                    @click="showEditWarningModal = true"
+                    class="w-full h-10 px-3 text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
+                >
+                    <i data-lucide="edit-3" class="w-4 h-4 text-slate-500"></i>
+                    <span>Edit Order</span>
+                </button>
 
-            <button
-                type="button"
-                @click="showDeleteOrderModal = true"
-                class="w-full h-10 px-3 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
-            >
-                <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
-                <span>Hapus Order</span>
-            </button>
+                <button
+                    type="button"
+                    @click="showDeleteOrderModal = true"
+                    class="w-full h-10 px-3 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
+                >
+                    <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+                    <span>Hapus Order</span>
+                </button>
+            </div>
         </div>
-    </div>
+    @endif
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -207,7 +227,7 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 class="text-base font-bold text-slate-900">Data Pelanggan</h3>
-                    @if ($order->customer)
+                    @if (!$isTechnician && $order->customer)
                         <a href="{{ route('customers.show', $order->customer->id) }}" class="text-2xs font-semibold text-primary-600 hover:underline">
                             Lihat Detail
                         </a>
@@ -215,166 +235,247 @@
                 </div>
 
                 @if ($order->customer)
-                    <div class="overflow-hidden">
-                        <table class="w-full text-xs">
-                            <tbody>
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top w-32">Nama</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top w-3">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top">{{ $order->customer->name }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">No. WhatsApp / HP</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top">
-                                        @if ($order->customer->phone)
-                                            <a href="https://wa.me/{{ $order->customer->formatted_phone }}" target="_blank" class="text-slate-700 hover:text-primary-600 hover:underline inline-flex items-center gap-1" title="Buka WhatsApp">
-                                                <span>{{ $order->customer->phone }}</span>
-                                            </a>
-                                        @else
-                                            <span class="text-slate-400 italic">Tidak ada</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">Alamat</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top leading-relaxed">
-                                        {{ $order->customer->address ?: '-' }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <dl class="space-y-3 text-xs">
+                        <div>
+                            <dt class="text-xs font-semibold text-slate-900">Nama Pelanggan</dt>
+                            <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                {{ $order->customer->name }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold text-slate-900">No. WhatsApp / HP</dt>
+                            <dd class="mt-0.5 font-normal text-slate-600 break-words">
+                                @if ($order->customer->phone)
+                                    <a href="https://wa.me/{{ $order->customer->formatted_phone }}" target="_blank" class="font-normal text-slate-600 hover:text-primary-600 hover:underline inline-flex items-center gap-1" title="Buka WhatsApp">
+                                        <span>{{ $order->customer->phone }}</span>
+                                    </a>
+                                @else
+                                    <span class="text-slate-500">Tidak ada</span>
+                                @endif
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold text-slate-900">Alamat Pelanggan</dt>
+                            <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                {{ $order->customer->address ?: '-' }}
+                            </dd>
+                        </div>
+                    </dl>
                 @else
-                    <p class="text-xs text-slate-500 italic">Pelanggan Umum (Tanpa Akun)</p>
+                    <p class="text-xs text-slate-500">Pelanggan Umum (Tanpa Akun)</p>
                 @endif
             </div>
 
-            <!-- Device & Intake Details -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
-                <div class="pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900">Perangkat dan Kondisi</h3>
+            <!-- Customer Complaint Card -->
+            <div x-data="{ open: false }" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                <button
+                    type="button"
+                    @click="open = !open"
+                    :aria-expanded="open"
+                    class="w-full flex items-center justify-between gap-3 text-left cursor-pointer group"
+                    :class="{ 'pb-3 border-b border-slate-100': open }"
+                >
+                    <h3 class="text-base font-bold text-slate-900">Keluhan Pelanggan</h3>
+                    <span class="w-7 h-7 rounded-lg bg-slate-50 group-hover:bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition-colors shrink-0">
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>
+                </button>
+                <div
+                    x-show="open"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="pt-4"
+                >
+                    <p class="text-xs font-normal text-slate-600 text-justify leading-relaxed break-words">
+                        {{ $order->complaints ?: ($order->complaint ?: 'Tidak ada catatan keluhan khusus.') }}
+                    </p>
                 </div>
+            </div>
 
-                <div class="overflow-hidden">
-                    <table class="w-full text-xs">
-                        <tbody>
-                            <tr>
-                                <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top w-32">Tipe Gadget</td>
-                                <td class="py-1.5 px-1 text-slate-400 align-top w-3">:</td>
-                                <td class="py-1.5 pl-2 text-slate-700 align-top">
-                                    {{ $order->device?->brand ?? '-' }} {{ $order->device?->model ?? '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">Kategori</td>
-                                <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                <td class="py-1.5 pl-2 text-slate-700 align-top">
-                                    {{ ucfirst($order->device?->device_type ?? 'Smartphone') }}
-                                </td>
-                            </tr>
-                            @if ($order->device?->color)
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">Warna</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top">
-                                        {{ $order->device->color }}
-                                    </td>
-                                </tr>
-                            @endif
-                            @if ($order->device?->variant)
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">Varian</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top">
-                                        {{ $order->device->variant }}
-                                    </td>
-                                </tr>
-                            @endif
-                            @if ($order->device?->specs)
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">Spesifikasi</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top leading-relaxed">
-                                        {{ $order->device->specs }}
-                                    </td>
-                                </tr>
-                            @endif
-                            @if ($order->device?->imei_or_serial)
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">IMEI / Serial No</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top font-mono">
-                                        {{ $order->device->imei_or_serial }}
-                                    </td>
-                                </tr>
-                            @endif
-                            @if ($order->passcode || $order->device?->security_code || $order->device?->passcode)
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">PIN / Pola Layar</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top font-mono font-semibold">
-                                        {{ $order->passcode ?: ($order->device?->security_code ?: $order->device?->passcode) }}
-                                    </td>
-                                </tr>
-                            @endif
-                            @if ($order->accessories_included || $order->accessories_brought)
-                                <tr>
-                                    <td class="py-1.5 pr-2 font-medium text-slate-900 whitespace-nowrap align-top">Kelengkapan</td>
-                                    <td class="py-1.5 px-1 text-slate-400 align-top">:</td>
-                                    <td class="py-1.5 pl-2 text-slate-700 align-top">
-                                        {{ $order->accessories_included ?: $order->accessories_brought }}
-                                    </td>
-                                </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Device Details Card -->
+            <div x-data="{ open: false }" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                <button
+                    type="button"
+                    @click="open = !open"
+                    :aria-expanded="open"
+                    class="w-full flex items-center justify-between gap-3 text-left cursor-pointer group"
+                    :class="{ 'pb-3 border-b border-slate-100': open }"
+                >
+                    <h3 class="text-base font-bold text-slate-900">Data Perangkat</h3>
+                    <span class="w-7 h-7 rounded-lg bg-slate-50 group-hover:bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition-colors shrink-0">
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>
+                </button>
 
-                <!-- Physical Checklist Summary -->
                 @php
-                    $physicalCond = $order->physical_condition ?? [];
-                    $physicalLabels = [
-                        'screen_condition' => 'Kaca Layar',
-                        'lcd_condition' => 'Tampilan LCD',
-                        'body_condition' => 'Bodi / Backdoor',
-                        'camera_condition' => 'Kamera Depan/Belakang',
-                        'buttons_condition' => 'Tombol Fisik',
-                        'charging_condition' => 'Port Charger',
-                    ];
+                    $deviceImei = $order->device?->imei ?: ($order->device?->serial_number ?: $order->device?->imei_or_serial);
+                    $devicePasscode = $order->passcode ?: ($order->device?->passcode ?: $order->device?->security_code);
                 @endphp
-                @if (is_array($physicalCond) && count($physicalCond) > 0)
-                    <div class="pt-3 border-t border-slate-100">
-                        <span class="text-xs font-semibold text-slate-900 block mb-2.5">Checklist Kondisi Fisik Saat Masuk</span>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            @foreach ($physicalCond as $itemKey => $itemVal)
-                                @if (!empty($itemVal))
-                                    @php
-                                        $isMatot = str_contains($itemVal, 'Matot');
-                                        $isNormal = in_array(strtolower($itemVal), ['normal', 'mulus', 'normal mulus', 'normal jernih', 'normal empuk', 'normal kencang']);
-                                        $isWarning = $isMatot || str_contains(strtolower($itemVal), 'pecah') || str_contains(strtolower($itemVal), 'mati') || str_contains(strtolower($itemVal), 'rusak');
-                                    @endphp
-                                    <div class="p-2 rounded-xl border {{ $isMatot ? 'bg-amber-50/60 border-amber-200' : ($isWarning ? 'bg-rose-50/60 border-rose-200' : ($isNormal ? 'bg-emerald-50/40 border-emerald-100' : 'bg-slate-50 border-slate-200')) }}">
-                                        <span class="text-3xs font-medium text-slate-500 block leading-tight">{{ $physicalLabels[$itemKey] ?? ucwords(str_replace('_', ' ', $itemKey)) }}</span>
-                                        <span class="text-xs font-semibold {{ $isMatot ? 'text-amber-800' : ($isWarning ? 'text-rose-700' : ($isNormal ? 'text-emerald-700' : 'text-slate-800')) }} block mt-0.5 truncate" title="{{ $itemVal }}">
-                                            @if($isMatot)
-                                                ⚡ {{ $itemVal }}
-                                            @elseif($isNormal)
-                                                ✓ {{ $itemVal }}
-                                            @else
-                                                • {{ $itemVal }}
-                                            @endif
-                                        </span>
-                                    </div>
-                                @endif
-                            @endforeach
+
+                <div
+                    x-show="open"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="pt-4"
+                >
+                    <dl class="space-y-3 text-xs">
+                        <div>
+                            <dt class="text-xs font-semibold text-slate-900">Merek / Brand</dt>
+                            <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                {{ $order->device?->brand ?: '-' }}
+                            </dd>
                         </div>
+                        <div>
+                            <dt class="text-xs font-semibold text-slate-900">Model / Tipe HP</dt>
+                            <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                {{ $order->device?->model ?: '-' }}
+                            </dd>
+                        </div>
+                        @if ($deviceImei)
+                            <div>
+                                <dt class="text-xs font-semibold text-slate-900">Nomor IMEI / SN</dt>
+                                <dd class="mt-0.5 font-normal text-slate-600 break-all">
+                                    {{ $deviceImei }}
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($devicePasscode)
+                            <div>
+                                <dt class="text-xs font-semibold text-slate-900">Pola / PIN / Sandi Layar</dt>
+                                <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                    {{ $devicePasscode }}
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($order->device?->color)
+                            <div>
+                                <dt class="text-xs font-semibold text-slate-900">Warna Unit</dt>
+                                <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                    {{ $order->device->color }}
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($order->device?->variant)
+                            <div>
+                                <dt class="text-xs font-semibold text-slate-900">Varian (RAM / Internal)</dt>
+                                <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                    {{ $order->device->variant }}
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($order->device?->specs)
+                            <div>
+                                <dt class="text-xs font-semibold text-slate-900">Spesifikasi Lainnya</dt>
+                                <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                    {{ $order->device->specs }}
+                                </dd>
+                            </div>
+                        @endif
+                        @if ($order->accessories_included || $order->accessories_brought)
+                            <div>
+                                <dt class="text-xs font-semibold text-slate-900">Kelengkapan yang Dititipkan</dt>
+                                <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                    {{ $order->accessories_included ?: $order->accessories_brought }}
+                                </dd>
+                            </div>
+                        @endif
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Physical Condition Card -->
+            @php
+                $physicalCond = $order->physical_condition ?? [];
+                $physicalLabels = [
+                    'screen_condition' => 'Kaca Layar',
+                    'lcd_condition' => 'Tampilan LCD',
+                    'body_condition' => 'Kondisi Bodi / Backdoor',
+                    'camera_condition' => 'Kamera Depan/Belakang',
+                    'buttons_condition' => 'Tombol Fisik',
+                    'charging_condition' => 'Port Charger',
+                ];
+                $isAssoc = is_array($physicalCond) && array_keys($physicalCond) !== range(0, count($physicalCond) - 1);
+            @endphp
+            @if (is_array($physicalCond) && count($physicalCond) > 0)
+                <div x-data="{ open: false }" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        class="w-full flex items-center justify-between gap-3 text-left cursor-pointer group"
+                        :class="{ 'pb-3 border-b border-slate-100': open }"
+                    >
+                        <h3 class="text-base font-bold text-slate-900">Kondisi Fisik Awal</h3>
+                        <span class="w-7 h-7 rounded-lg bg-slate-50 group-hover:bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition-colors shrink-0">
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </span>
+                    </button>
+                    <div
+                        x-show="open"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="pt-4"
+                    >
+                        <dl class="space-y-3 text-xs">
+                            @if ($isAssoc)
+                                @foreach ($physicalCond as $itemKey => $itemVal)
+                                    @if (!empty($itemVal))
+                                        <div>
+                                            <dt class="text-xs font-semibold text-slate-900">
+                                                {{ $physicalLabels[$itemKey] ?? ucwords(str_replace('_', ' ', $itemKey)) }}
+                                            </dt>
+                                            <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                                {{ $itemVal }}
+                                            </dd>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @else
+                                @foreach ($physicalCond as $idx => $itemVal)
+                                    @if (!empty($itemVal))
+                                        <div>
+                                            <dt class="text-xs font-semibold text-slate-900">
+                                                {{ count($physicalCond) > 1 ? 'Kondisi ' . ($idx + 1) : 'Kondisi Fisik' }}
+                                            </dt>
+                                            <dd class="mt-0.5 font-normal text-slate-600 break-words leading-relaxed">
+                                                {{ $itemVal }}
+                                            </dd>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @endif
+                        </dl>
                     </div>
-                @elseif (is_array($order->physical_condition_checklist) && count($order->physical_condition_checklist) > 0)
-                    <div class="pt-3 border-t border-slate-100">
-                        <span class="text-xs font-medium text-slate-900 block mb-2">Kondisi Fisik Saat Diterima</span>
-                        <div class="grid grid-cols-2 gap-1.5">
+                </div>
+            @elseif (is_array($order->physical_condition_checklist) && count($order->physical_condition_checklist) > 0)
+                <div x-data="{ open: false }" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        class="w-full flex items-center justify-between gap-3 text-left cursor-pointer group"
+                        :class="{ 'pb-3 border-b border-slate-100': open }"
+                    >
+                        <h3 class="text-base font-bold text-slate-900">Kondisi Fisik Awal</h3>
+                        <span class="w-7 h-7 rounded-lg bg-slate-50 group-hover:bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-500 group-hover:text-slate-700 transition-colors shrink-0">
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </span>
+                    </button>
+                    <div
+                        x-show="open"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="pt-4"
+                    >
+                        <dl class="space-y-3 text-xs">
                             @php
                                 $checklistLabels = [
                                     'power_on' => 'Nyala Normal',
@@ -388,29 +489,23 @@
                                 ];
                             @endphp
                             @foreach ($order->physical_condition_checklist as $k => $val)
-                                <div class="flex items-center space-x-1.5 text-2xs">
-                                    @if ($val)
-                                        <span class="text-emerald-600 font-bold">✓</span>
-                                    @else
-                                        <span class="text-rose-500 font-bold">✕</span>
-                                    @endif
-                                    <span class="text-slate-600">{{ $checklistLabels[$k] ?? ucwords(str_replace('_', ' ', $k)) }}</span>
+                                <div>
+                                    <dt class="text-xs font-semibold text-slate-900">
+                                        {{ $checklistLabels[$k] ?? ucwords(str_replace('_', ' ', $k)) }}
+                                    </dt>
+                                    <dd class="mt-0.5 font-normal text-slate-600 break-words">
+                                        @if ($val)
+                                            <span class="text-emerald-700">✓ Normal / Baik</span>
+                                        @else
+                                            <span class="text-rose-600">✕ Bermasalah / Rusak</span>
+                                        @endif
+                                    </dd>
                                 </div>
                             @endforeach
-                        </div>
+                        </dl>
                     </div>
-                @endif
-            </div>
-
-            <!-- Customer Complaint Card -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
-                <div class="pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900">Keluhan Pelanggan</h3>
                 </div>
-                <div class="text-xs text-slate-800 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                    {{ $order->complaints ?: ($order->complaint ?: 'Tidak ada catatan keluhan khusus.') }}
-                </div>
-            </div>
+            @endif
 
             {{-- Foto Kondisi Fisik Unit (Opsional) Card --}}
             @if (is_array($order->photos) && count($order->photos) > 0)
@@ -522,13 +617,15 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <h3 class="text-base font-bold text-slate-900">Teknisi Bertugas</h3>
-                    <button
-                        type="button"
-                        wire:click="$set('showAssignTechModal', true)"
-                        class="text-2xs font-semibold text-primary-600 hover:underline cursor-pointer"
-                    >
-                        Ganti Teknisi
-                    </button>
+                    @if (!$isTechnician)
+                        <button
+                            type="button"
+                            wire:click="$set('showAssignTechModal', true)"
+                            class="text-2xs font-semibold text-primary-600 hover:underline cursor-pointer"
+                        >
+                            Ganti Teknisi
+                        </button>
+                    @endif
                 </div>
 
                 @if ($order->technician)
@@ -542,58 +639,56 @@
                         </div>
                     </div>
                 @else
-                    <div class="py-2.5 text-center text-slate-400 text-xs font-normal">
-                        Belum ada teknisi yang ditugaskan. Klik tombol "Ganti Teknisi" di atas.
+                    <div class="py-2.5 text-center text-slate-500 text-xs font-normal">
+                        Belum ada teknisi yang ditugaskan.
                     </div>
                 @endif
             </div>
 
             <!-- Kelola Order (Edit & Hapus) - Desktop Only -->
-            <div class="hidden lg:block bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
-                <div class="pb-3 border-b border-slate-100">
-                    <h3 class="text-base font-bold text-slate-900">Kelola Order</h3>
-                </div>
+            @if (!$isTechnician)
+                <div class="hidden lg:block bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+                    <div class="pb-3 border-b border-slate-100">
+                        <h3 class="text-base font-bold text-slate-900">Kelola Order</h3>
+                    </div>
 
-                <div class="flex flex-col gap-2.5">
-                    <button
-                        type="button"
-                        @click="showEditWarningModal = true"
-                        class="w-full h-10 px-4 text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
-                    >
-                        <i data-lucide="edit-3" class="w-4 h-4 text-slate-500"></i>
-                        <span>Edit Order</span>
-                    </button>
+                    <div class="flex flex-col gap-2.5">
+                        <button
+                            type="button"
+                            @click="showEditWarningModal = true"
+                            class="w-full h-10 px-4 text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
+                        >
+                            <i data-lucide="edit-3" class="w-4 h-4 text-slate-500"></i>
+                            <span>Edit Order</span>
+                        </button>
 
-                    <button
-                        type="button"
-                        @click="showDeleteOrderModal = true"
-                        class="w-full h-10 px-4 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
-                    >
-                        <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
-                        <span>Hapus Order</span>
-                    </button>
+                        <button
+                            type="button"
+                            @click="showDeleteOrderModal = true"
+                            class="w-full h-10 px-4 text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap cursor-pointer gap-2"
+                        >
+                            <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+                            <span>Hapus Order</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <!-- Right 2 Cols: Services & Cost Breakdown, Diagnosis, Timeline -->
         <div class="lg:col-span-2 flex flex-col gap-6">
             <!-- Billing & Items Card -->
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-5">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Rincian Biaya</h2>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button
-                            type="button"
-                            wire:click="openAddItemModal"
-                            class="h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap shrink-0 cursor-pointer gap-1.5"
-                        >
-                            <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
-                            <span>Tambah Biaya</span>
-                        </button>
-                    </div>
+                <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <h2 class="text-base font-bold text-slate-900">Rincian Biaya</h2>
+                    <button
+                        type="button"
+                        wire:click="openAddItemModal"
+                        class="h-9 sm:h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap shrink-0 cursor-pointer gap-1.5"
+                    >
+                        <i data-lucide="plus" class="w-4 h-4 shrink-0"></i>
+                        <span>Tambah Biaya</span>
+                    </button>
                 </div>
 
                 <!-- Items Table -->
@@ -610,7 +705,14 @@
                             @forelse ($order->items as $item)
                                 <tr class="hover:bg-slate-50/60">
                                     <td class="py-3 px-3 font-medium text-slate-800">
-                                        {{ $item->name }}
+                                        <div>{{ $item->name }}</div>
+                                        @if ($item->orderPart?->product)
+                                            <div class="mt-1 flex items-center gap-1.5 text-2xs text-slate-500 font-normal">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">
+                                                    Sparepart: {{ $item->orderPart->product->name }} ({{ $item->orderPart->quantity }} {{ $item->orderPart->product->unit ?? 'pcs' }})
+                                                </span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="py-3 px-3 text-right font-semibold text-slate-900">
                                         Rp. {{ number_format($item->price, 0, ',', '.') }}
@@ -621,7 +723,7 @@
                                             @click="
                                                 Swal.fire({
                                                     title: 'Hapus Item Biaya?',
-                                                    text: 'Hapus \'{{ addslashes($item->name) }}\' dari rincian biaya servis?',
+                                                    text: '{{ $item->orderPart?->product ? 'Hapus item ini dan kembalikan stok sparepart ke inventaris?' : 'Hapus \'' . addslashes($item->name) . '\' dari rincian biaya servis?' }}',
                                                     icon: 'warning',
                                                     showCancelButton: true,
                                                     confirmButtonColor: '#e11d48',
@@ -649,7 +751,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="py-12 text-center text-slate-400 text-xs font-normal">
+                                    <td colspan="3" class="py-12 text-center text-slate-500 text-xs font-normal">
                                         Belum ada rincian biaya yang ditambahkan. Klik tombol "+ Tambah Biaya" di atas.
                                     </td>
                                 </tr>
@@ -725,165 +827,326 @@
                 @endif
             </div>
 
-            <!-- Diagnosis & Inspection Card -->
-            <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Diagnosa & Pengujian (QC)</h2>
-                        <p class="text-xs text-slate-500">Catatan kerusakan dari teknisi dan hasil checklist pengetesan.</p>
-                    </div>
-                    <button
-                        type="button"
-                        wire:click="$set('showDiagnosisModal', true)"
-                        class="h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-lg transition-colors shadow-2xs inline-flex items-center justify-center whitespace-nowrap shrink-0 cursor-pointer"
-                    >
-                        <i data-lucide="clipboard-check" class="w-3.5 h-3.5 mr-1.5 shrink-0"></i>
-                        <span>Catat Diagnosa / QC</span>
-                    </button>
-                </div>
-
-                @if ($order->diagnoses->isNotEmpty())
-                    <div class="space-y-4">
-                        @foreach ($order->diagnoses as $diag)
-                            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
-                                <div class="flex items-center justify-between text-2xs text-slate-500">
-                                    <span class="font-bold text-slate-700">Teknisi: {{ $diag->technician?->name ?? 'Sistem' }}</span>
-                                    <span>{{ $diag->created_at->isoFormat('D MMM Y, HH:mm') }}</span>
-                                </div>
-                                <div class="text-xs text-slate-800">
-                                    <span class="font-semibold block text-slate-500 text-2xs">Temuan Diagnosa:</span>
-                                    <p class="mt-0.5">{{ $diag->diagnosis_notes }}</p>
-                                </div>
-                                @if ($diag->action_taken)
-                                    <div class="text-xs text-slate-800 pt-1">
-                                        <span class="font-semibold block text-slate-500 text-2xs">Tindakan Perbaikan:</span>
-                                        <p class="mt-0.5">{{ $diag->action_taken }}</p>
-                                    </div>
-                                @endif
-
-                                @if (is_array($diag->testing_checklist))
-                                    <div class="pt-2 border-t border-slate-200/60">
-                                        <span class="font-semibold block text-slate-500 text-2xs mb-1.5">Hasil Checklist QC:</span>
-                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-2xs">
-                                            @foreach ($diag->testing_checklist as $qcItem => $pass)
-                                                <div class="flex items-center space-x-1">
-                                                    @if ($pass)
-                                                        <span class="text-emerald-600 font-bold">✓</span>
-                                                    @else
-                                                        <span class="text-rose-500 font-bold">✕</span>
-                                                    @endif
-                                                    <span class="text-slate-600 uppercase">{{ str_replace('_', ' ', $qcItem) }}</span>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-xs text-slate-400 italic py-2">Belum ada catatan diagnosa teknisi.</p>
-                @endif
-            </div>
-
             <!-- History Timeline Log -->
             <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
                 <div class="pb-3 border-b border-slate-100">
                     <h2 class="text-base font-bold text-slate-900">Riwayat & Log Aktivitas</h2>
                 </div>
 
-                <div class="relative pl-7 space-y-5 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
-                    @forelse ($order->histories->sortByDesc('created_at') as $history)
-                        <div class="relative text-xs">
-                            <div class="absolute -left-4 top-1 w-3 h-3 -translate-x-1/2 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="font-bold text-slate-800">
-                                    {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}
-                                </span>
-                                <span class="text-3xs text-slate-400 whitespace-nowrap" title="{{ $history->created_at->isoFormat('D MMMM Y, HH:mm') }} WIB{{ $history->user ? ' (oleh ' . $history->user->name . ')' : '' }}">
-                                    {{ $history->created_at->diffForHumans() }}
-                                </span>
-                            </div>
-                            @if ($history->notes)
-                                <div class="mt-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-normal">
-                                    {{ $history->notes }}
+                @if ($order->histories->isNotEmpty())
+                    <div class="relative pl-7 space-y-5 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
+                        @foreach ($order->histories->sortByDesc('created_at') as $history)
+                            <div class="text-xs">
+                                <div class="relative flex items-center justify-between gap-2 min-h-4">
+                                    <div class="absolute -left-4 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
+                                    <span class="font-bold text-slate-800 leading-none">
+                                        {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}
+                                    </span>
+                                    <span class="text-3xs text-slate-400 whitespace-nowrap" title="{{ $history->created_at->isoFormat('D MMMM Y, HH:mm') }} WIB{{ $history->user ? ' (oleh ' . $history->user->name . ')' : '' }}">
+                                        {{ $history->created_at->diffForHumans() }}
+                                    </span>
                                 </div>
-                            @endif
-                        </div>
-                    @empty
-                        <p class="text-xs text-slate-400 italic">Belum ada catatan riwayat.</p>
-                    @endforelse
-                </div>
+                                @if ($history->notes)
+                                    <div class="mt-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-normal">
+                                        {{ $history->notes }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-xs text-slate-500 text-center py-4">Belum ada catatan riwayat.</p>
+                @endif
             </div>
         </div>
     </div>
 
-    <!-- Modal: Add Item / Service -->
+    <!-- Modal: Tambah Biaya -->
     @if ($showAddItemModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-200">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h2 class="text-base font-bold text-slate-900">Tambah Layanan atau Sparepart</h2>
-                    <button wire:click="$set('showAddItemModal', false)" class="text-slate-400 hover:text-slate-600">
+        <div
+            class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+            @keydown.escape.window="$wire.set('showAddItemModal', false)"
+        >
+            <div
+                class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5 border border-slate-200"
+                @click.outside="$wire.set('showAddItemModal', false)"
+            >
+                <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                    <h2 class="text-base font-bold text-slate-900">Tambah Biaya</h2>
+                    <button
+                        type="button"
+                        wire:click="$set('showAddItemModal', false)"
+                        class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
 
-                <div class="space-y-3 text-xs">
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1">Pilih dari Katalog (Opsional)</label>
-                        <select
-                            wire:model.live="selected_service_id"
-                            wire:change="onServiceSelected"
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
-                        >
-                            <option value="">-- Ketik Bebas / Custom --</option>
-                            @foreach ($availableServices as $srv)
-                                <option value="{{ $srv->id }}">{{ $srv->name }} (Rp. {{ number_format($srv->price, 0, ',', '.') }})</option>
-                            @endforeach
-                        </select>
+                @php
+                    $selectedCatalogService = $selected_service_id
+                        ? $availableServices->firstWhere('id', $selected_service_id)
+                        : null;
+                @endphp
+
+                <form wire:submit="addItem" class="space-y-4">
+                    @if ($availableServices->isNotEmpty())
+                        <div x-data="{ openCatalog: false }" @click.outside="openCatalog = false" class="relative">
+                            <label class="block text-xs font-semibold text-slate-900 mb-2">
+                                Pilih dari Katalog Layanan
+                            </label>
+                            <button
+                                type="button"
+                                @click="openCatalog = !openCatalog"
+                                class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border {{ $selectedCatalogService ? 'border-primary-500 bg-primary-50/40 text-primary-900 font-semibold' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }} text-xs transition-all cursor-pointer focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                            >
+                                <span class="truncate">
+                                    @if ($selectedCatalogService)
+                                        {{ $selectedCatalogService->name }} — Rp {{ number_format($selectedCatalogService->price, 0, ',', '.') }}
+                                    @else
+                                        Input Manual / Tanpa Jasa Katalog
+                                    @endif
+                                </span>
+                                <svg class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="{ 'rotate-180': openCatalog }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+
+                            <div
+                                x-show="openCatalog"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 max-h-56 overflow-y-auto divide-y divide-slate-50"
+                            >
+                                <button
+                                    type="button"
+                                    wire:click="selectCatalogService('')"
+                                    @click="openCatalog = false"
+                                    class="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition-colors cursor-pointer {{ !$selected_service_id ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-600 hover:bg-slate-50' }}"
+                                >
+                                    <span>Input Manual / Tanpa Jasa Katalog</span>
+                                    @if (!$selected_service_id)
+                                        <svg class="w-3.5 h-3.5 text-primary-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                    @endif
+                                </button>
+
+                                @foreach ($availableServices as $srv)
+                                    <button
+                                        type="button"
+                                        wire:click="selectCatalogService('{{ $srv->id }}')"
+                                        @click="openCatalog = false"
+                                        class="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-xs text-left transition-colors cursor-pointer {{ $selected_service_id === $srv->id ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}"
+                                    >
+                                        <span class="truncate">{{ $srv->name }}</span>
+                                        <span class="shrink-0 font-semibold {{ $selected_service_id === $srv->id ? 'text-primary-700' : 'text-slate-500' }}">
+                                            Rp {{ number_format($srv->price, 0, ',', '.') }}
+                                        </span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Sparepart Selector (from Inventory) -->
+                    <div x-data="{ openParts: false }" @click.outside="openParts = false" class="space-y-2.5">
+                        <div class="relative">
+                            <label class="block text-xs font-semibold text-slate-900 mb-2">
+                                Gunakan Sparepart Inventaris <span class="font-normal text-slate-400">(Opsional)</span>
+                            </label>
+                            <button
+                                type="button"
+                                @click="openParts = !openParts"
+                                class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border {{ $selectedProduct ? 'border-primary-500 bg-primary-50/40 text-primary-900 font-semibold' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }} text-xs transition-all cursor-pointer focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                            >
+                                <span class="truncate">
+                                    @if ($selectedProduct)
+                                        {{ $selectedProduct->name }} — Sisa {{ $selectedProduct->stock }} {{ $selectedProduct->unit }}
+                                    @else
+                                        Tanpa Sparepart (Jasa Saja / Manual)
+                                    @endif
+                                </span>
+                                <svg class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="{ 'rotate-180': openParts }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+
+                            <div
+                                x-show="openParts"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden"
+                            >
+                                <div class="p-2 border-b border-slate-100 bg-slate-50/60">
+                                    <input
+                                        type="text"
+                                        wire:model.live.debounce.250ms="part_search"
+                                        placeholder="Cari nama sparepart atau SKU..."
+                                        class="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                                    />
+                                </div>
+
+                                <div class="max-h-52 overflow-y-auto divide-y divide-slate-50 py-1">
+                                    <button
+                                        type="button"
+                                        wire:click="selectSparepart('')"
+                                        @click="openParts = false"
+                                        class="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition-colors cursor-pointer {{ !$selected_product_id ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-600 hover:bg-slate-50' }}"
+                                    >
+                                        <span>Tanpa Sparepart (Jasa Saja / Manual)</span>
+                                        @if (!$selected_product_id)
+                                            <svg class="w-3.5 h-3.5 text-primary-600 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                        @endif
+                                    </button>
+
+                                    @forelse ($availableProducts as $prod)
+                                        <button
+                                            type="button"
+                                            wire:click="selectSparepart('{{ $prod->id }}')"
+                                            @click="openParts = false"
+                                            class="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-xs text-left transition-colors cursor-pointer {{ $selected_product_id === $prod->id ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}"
+                                        >
+                                            <div class="min-w-0">
+                                                <div class="truncate font-medium">{{ $prod->name }}</div>
+                                                <div class="text-2xs text-slate-400 mt-0.5">
+                                                    Stok: <span class="font-semibold text-slate-600">{{ $prod->stock }} {{ $prod->unit }}</span>
+                                                    {{ $prod->sku ? ' • ' . $prod->sku : '' }}
+                                                </div>
+                                            </div>
+                                            <span class="shrink-0 font-semibold {{ $selected_product_id === $prod->id ? 'text-primary-700' : 'text-slate-600' }}">
+                                                {{ (float) $prod->sell_price > 0 ? 'Rp ' . number_format($prod->sell_price, 0, ',', '.') : 'Rp 0' }}
+                                            </span>
+                                        </button>
+                                    @empty
+                                        <div class="px-3.5 py-4 text-center text-2xs text-slate-400">
+                                            Tidak ada sparepart tersedia yang cocok.
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+
+                        @if ($selectedProduct)
+                            <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
+                                <div class="min-w-0">
+                                    <span class="font-semibold text-slate-800 block">Jumlah Pakai</span>
+                                    <span class="text-2xs text-emerald-600 font-medium">
+                                        Stok inventaris berkurang {{ $part_quantity }} {{ $selectedProduct->unit }}
+                                    </span>
+                                </div>
+                                <div class="inline-flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden shrink-0">
+                                    <button
+                                        type="button"
+                                        wire:click="decrementPartQuantity"
+                                        @disabled($part_quantity <= 1)
+                                        class="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed font-bold"
+                                    >
+                                        −
+                                    </button>
+                                    <span class="w-9 text-center font-bold text-slate-900 text-xs select-none">
+                                        {{ $part_quantity }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        wire:click="incrementPartQuantity"
+                                        @disabled($part_quantity >= $selectedProduct->stock)
+                                        class="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed font-bold"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
+                        @error('selected_product_id')
+                            <span class="text-rose-500 text-2xs block">{{ $message }}</span>
+                        @enderror
+                        @error('part_quantity')
+                            <span class="text-rose-500 text-2xs block">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Nama Layanan / Barang <span class="text-rose-500">*</span></label>
+                        <label for="modal_item_name" class="block text-xs font-semibold text-slate-900 mb-2">
+                            Nama Layanan / Sparepart <span class="text-rose-500">*</span>
+                        </label>
                         <input
+                            id="modal_item_name"
                             type="text"
                             wire:model="item_name"
                             placeholder="Contoh: Ganti LCD OLED Samsung A52"
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
+                            class="block w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
                         />
-                        @error('item_name') <span class="text-rose-500 text-2xs block mt-1">{{ $message }}</span> @enderror
+                        @error('item_name')
+                            <span class="text-rose-500 text-2xs block mt-1.5">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Harga / Biaya (Rp) <span class="text-rose-500">*</span></label>
-                        <input
-                            type="number"
-                            wire:model="item_price"
-                            min="0"
-                            placeholder="0"
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
-                        />
-                        @error('item_price') <span class="text-rose-500 text-2xs block mt-1">{{ $message }}</span> @enderror
+                        <label for="modal_item_price" class="block text-xs font-semibold text-slate-900 mb-2">
+                            Nominal Biaya <span class="text-rose-500">*</span>
+                        </label>
+                        <div
+                            x-data="{
+                                rawPrice: $wire.entangle('item_price'),
+                                displayPrice: '',
+                                init() {
+                                    this.syncFromWire(this.rawPrice);
+                                    this.$watch('rawPrice', (val) => this.syncFromWire(val));
+                                },
+                                syncFromWire(val) {
+                                    const num = Number(val || 0);
+                                    this.displayPrice = num > 0 ? new Intl.NumberFormat('id-ID').format(num) : '';
+                                },
+                                updatePrice(e) {
+                                    const digits = (e.target.value || '').replace(/\D/g, '');
+                                    const num = digits ? Number(digits) : 0;
+                                    this.rawPrice = num;
+                                    this.displayPrice = digits ? new Intl.NumberFormat('id-ID').format(num) : '';
+                                }
+                            }"
+                            class="relative"
+                        >
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-semibold text-slate-400">
+                                Rp
+                            </span>
+                            <input
+                                id="modal_item_price"
+                                type="text"
+                                inputmode="numeric"
+                                :value="displayPrice"
+                                @input="updatePrice($event)"
+                                placeholder="0"
+                                class="block w-full rounded-xl border border-slate-200 pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
+                            />
+                        </div>
+                        @error('item_price')
+                            <span class="text-rose-500 text-2xs block mt-1.5">{{ $message }}</span>
+                        @enderror
                     </div>
-                </div>
 
-                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                    <button
-                        type="button"
-                        wire:click="$set('showAddItemModal', false)"
-                        class="h-10 px-4 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="addItem"
-                        class="h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
-                    >
-                        Simpan Item
-                    </button>
-                </div>
+                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                        <button
+                            type="button"
+                            wire:click="$set('showAddItemModal', false)"
+                            class="h-10 px-4 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            wire:loading.attr="disabled"
+                            class="h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+                        >
+                            <i data-lucide="loader-circle" class="w-3.5 h-3.5 animate-spin" wire:loading wire:target="addItem"></i>
+                            <span>Simpan Biaya</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif
@@ -955,21 +1218,48 @@
                     @endif
 
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Nominal Pembayaran Diterima (Rp) <span class="text-rose-500">*</span></label>
-                        <input
-                            type="number"
-                            wire:model="payment_amount"
-                            min="1"
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500 font-bold text-slate-900"
-                        />
-                        @error('payment_amount') <span class="text-rose-500 text-2xs block mt-1">{{ $message }}</span> @enderror
+                        <label class="block font-semibold text-slate-900 mb-2">Nominal Pembayaran Diterima <span class="text-rose-500">*</span></label>
+                        <div
+                            x-data="{
+                                rawAmount: $wire.entangle('payment_amount'),
+                                displayAmount: '',
+                                init() {
+                                    this.syncFromWire(this.rawAmount);
+                                    this.$watch('rawAmount', (val) => this.syncFromWire(val));
+                                },
+                                syncFromWire(val) {
+                                    const num = Number(val || 0);
+                                    this.displayAmount = num > 0 ? new Intl.NumberFormat('id-ID').format(num) : '';
+                                },
+                                updateAmount(e) {
+                                    const digits = (e.target.value || '').replace(/\D/g, '');
+                                    const num = digits ? Number(digits) : 0;
+                                    this.rawAmount = num;
+                                    this.displayAmount = digits ? new Intl.NumberFormat('id-ID').format(num) : '';
+                                }
+                            }"
+                            class="relative"
+                        >
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-semibold text-slate-400">
+                                Rp
+                            </span>
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                :value="displayAmount"
+                                @input="updateAmount($event)"
+                                placeholder="0"
+                                class="block w-full rounded-xl border border-slate-200 pl-9 pr-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
+                            />
+                        </div>
+                        @error('payment_amount') <span class="text-rose-500 text-2xs block mt-1.5">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Metode Pembayaran</label>
+                        <label class="block font-semibold text-slate-900 mb-2">Metode Pembayaran</label>
                         <select
                             wire:model="payment_method"
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
+                            class="block w-full rounded-xl border border-slate-200 px-3.5 py-2.5 bg-white text-xs text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
                         >
                             <option value="cash">Tunai (Cash)</option>
                             <option value="transfer">Transfer Bank</option>
@@ -1019,7 +1309,7 @@
                             wire:model="payment_notes"
                             rows="2"
                             placeholder="Misal: Uang Muka (DP) dari pelanggan, atau catatan bukti transfer..."
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
+                            class="block w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
                         ></textarea>
                         @error('payment_notes') <span class="text-rose-500 text-2xs block mt-1">{{ $message }}</span> @enderror
                     </div>
@@ -1047,76 +1337,6 @@
         </div>
     @endif
 
-    <!-- Modal: Diagnosis / QC Checklist -->
-    @if ($showDiagnosisModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h2 class="text-base font-bold text-slate-900">Catat Diagnosa & Checklist Uji Fungsi</h2>
-                    <button wire:click="$set('showDiagnosisModal', false)" class="text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
-
-                <div class="space-y-4 text-xs">
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1">Temuan Kerusakan / Diagnosa <span class="text-rose-500">*</span></label>
-                        <textarea
-                            wire:model="diagnosis_notes"
-                            rows="3"
-                            placeholder="Jelaskan temuan kerusakan komponen, jalur konslet, atau analisis teknis..."
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
-                        ></textarea>
-                        @error('diagnosis_notes') <span class="text-rose-500 text-2xs block mt-1">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1">Tindakan Perbaikan yang Dilakukan</label>
-                        <textarea
-                            wire:model="action_taken"
-                            rows="2"
-                            placeholder="Contoh: Reball IC power, jumper jalur mic, ganti konektor fleksibel..."
-                            class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
-                        ></textarea>
-                    </div>
-
-                    <div>
-                        <span class="block font-medium text-slate-700 mb-2">Checklist Uji Fungsi (QC):</span>
-                        <div class="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                            @foreach ($testing_checklist as $qcKey => $qcVal)
-                                <label class="inline-flex items-center space-x-2 text-xs">
-                                    <input
-                                        type="checkbox"
-                                        wire:model="testing_checklist.{{ $qcKey }}"
-                                        class="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <span class="capitalize text-slate-700">{{ str_replace('_', ' ', $qcKey) }} Normal</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                    <button
-                        type="button"
-                        wire:click="$set('showDiagnosisModal', false)"
-                        class="h-10 px-4 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="saveDiagnosis"
-                        class="h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center justify-center whitespace-nowrap"
-                    >
-                        Simpan Diagnosa
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
-
     <!-- Modal: Assign Technician -->
     @if ($showAssignTechModal)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -1129,10 +1349,10 @@
                 </div>
 
                 <div class="space-y-3 text-xs">
-                    <label class="block font-medium text-slate-700 mb-1">Pilih Teknisi Penanggung Jawab</label>
+                    <label class="block font-semibold text-slate-900 mb-2">Pilih Teknisi Penanggung Jawab</label>
                     <select
                         wire:model="assigned_technician_id"
-                        class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
+                        class="block w-full rounded-xl border border-slate-200 px-3.5 py-2.5 bg-white text-xs text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
                     >
                         <option value="">-- Antrean Terbuka (Belum Ada) --</option>
                         @foreach ($technicians as $tech)
@@ -1161,59 +1381,83 @@
         </div>
     @endif
 
-    <!-- Modal: Update Status & Log Aktivitas -->
+    <!-- Modal: Perbarui Status -->
     @if ($showUpdateStatusModal)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Perbarui Status & Log Aktivitas</h2>
-                        <p class="text-xs text-slate-500">Pilih status pengerjaan baru dan sertakan keterangan teknisi.</p>
-                    </div>
-                    <button wire:click="$set('showUpdateStatusModal', false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+            <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-5 border border-slate-200">
+                <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                    <h2 class="text-base font-bold text-slate-900">Perbarui Status</h2>
+                    <button
+                        type="button"
+                        wire:click="$set('showUpdateStatusModal', false)"
+                        class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
 
-                <form wire:submit="updateStatusWithNotes" class="space-y-4">
+                @php
+                    $statusDotColors = [
+                        'received' => 'bg-blue-600',
+                        'diagnosing' => 'bg-purple-600',
+                        'waiting_approval' => 'bg-amber-500',
+                        'in_progress' => 'bg-indigo-600',
+                        'waiting_parts' => 'bg-orange-500',
+                        'testing' => 'bg-violet-600',
+                        'ready_for_pickup' => 'bg-sky-500',
+                        'completed' => 'bg-emerald-500',
+                        'unrepairable' => 'bg-rose-600',
+                        'cancelled' => 'bg-rose-500',
+                    ];
+                @endphp
+
+                <form wire:submit="updateStatusWithNotes" class="space-y-5">
                     <div>
-                        <label class="block font-medium text-slate-700 text-xs mb-1.5">Pilih Status Baru <span class="text-rose-500">*</span></label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1.5 border border-slate-200 rounded-xl bg-slate-50/50">
+                        <label class="block font-semibold text-slate-900 text-xs mb-2.5">
+                            Pilih Status Baru <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             @foreach ($statusOptions as $key => $meta)
-                                <label class="flex items-start space-x-2.5 p-2 rounded-lg cursor-pointer border transition-colors {{ $new_status === $key ? 'bg-primary-50/70 border-primary-500' : 'bg-white border-slate-200/80 hover:bg-slate-50' }}">
+                                @php
+                                    $isSelected = $new_status === $key;
+                                    $dotClass = $statusDotColors[$key] ?? 'bg-slate-400';
+                                @endphp
+                                <label class="group relative flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl border cursor-pointer transition-all {{ $isSelected ? 'bg-primary-50/70 border-primary-500 ring-2 ring-primary-500/15' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/70' }}">
                                     <input
                                         type="radio"
                                         wire:model.live="new_status"
                                         value="{{ $key }}"
-                                        class="mt-0.5 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                                        class="sr-only"
                                     >
-                                    <div class="min-w-0">
-                                        <span class="block text-xs font-semibold {{ $new_status === $key ? 'text-primary-900' : 'text-slate-800' }}">
-                                            {{ $meta['label'] }}
-                                        </span>
-                                        <span class="block text-3xs text-slate-500 leading-tight mt-0.5">
-                                            {{ $meta['description'] }}
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $dotClass }}"></span>
+                                        <span class="text-xs truncate {{ $isSelected ? 'font-semibold text-primary-900' : 'font-medium text-slate-700 group-hover:text-slate-900' }}">
+                                            {{ $meta['badge'] ?? $meta['label'] }}
                                         </span>
                                     </div>
+                                    <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors {{ $isSelected ? 'bg-primary-600 border border-primary-600 text-white' : 'border border-slate-300 bg-white group-hover:border-slate-400' }}">
+                                        @if ($isSelected)
+                                            <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                        @endif
+                                    </span>
                                 </label>
                             @endforeach
                         </div>
                         @error('new_status')
-                            <span class="text-rose-500 text-2xs mt-1 block">{{ $message }}</span>
+                            <span class="text-rose-500 text-2xs mt-1.5 block">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div>
-                        <label class="block font-medium text-slate-700 text-xs mb-1">
-                            Keterangan / Catatan Pengerjaan (Opsional)
+                        <label class="block font-semibold text-slate-900 text-xs mb-2">
+                            Keterangan
                         </label>
                         <textarea
                             wire:model="status_notes"
                             rows="3"
                             placeholder="Contoh: IC CPU short, unit tidak bisa diperbaiki / Menunggu sparepart LCD tiba dari suplier / Selesai QC siap diserahkan..."
-                            class="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 focus:border-primary-500 focus:ring-primary-500"
+                            class="block w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden transition-all"
                         ></textarea>
-                        <span class="block text-3xs text-slate-400 mt-1">Catatan ini akan tersimpan permanen di riwayat aktivitas order dan dapat dilihat oleh tim.</span>
                         @error('status_notes')
                             <span class="text-rose-500 text-2xs mt-1 block">{{ $message }}</span>
                         @enderror
@@ -1233,7 +1477,7 @@
                             class="h-10 px-4 text-xs sm:text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
                         >
                             <i data-lucide="loader-circle" class="w-3.5 h-3.5 animate-spin" wire:loading wire:target="updateStatusWithNotes"></i>
-                            <span>Simpan Status & Catatan</span>
+                            <span>Simpan Status</span>
                         </button>
                     </div>
                 </form>
@@ -1313,14 +1557,15 @@
         </div>
     </div>
 
-    {{-- Modal Dialog: Peringatan Dampak Perubahan Edit Order --}}
-    <div
-        x-show="showEditWarningModal"
-        x-cloak
-        class="fixed inset-0 z-50 overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
-    >
+    @if (!$isTechnician)
+        {{-- Modal Dialog: Peringatan Dampak Perubahan Edit Order --}}
+        <div
+            x-show="showEditWarningModal"
+            x-cloak
+            class="fixed inset-0 z-50 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+        >
         <!-- Backdrop -->
         <div
             x-show="showEditWarningModal"
@@ -1471,5 +1716,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 

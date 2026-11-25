@@ -153,7 +153,11 @@
                                     Rp{{ number_format($ts['total_revenue'], 0, ',', '.') }}
                                 </td>
                                 <td class="py-3 px-4 text-right font-bold text-primary-700">
-                                    Rp{{ number_format($ts['commission_earned'], 0, ',', '.') }}
+                                    @if(($ts['commission_type'] ?? '') === 'salary')
+                                        <span class="text-slate-500 font-medium">Karyawan (Gaji)</span>
+                                    @else
+                                        Rp{{ number_format($ts['commission_earned'], 0, ',', '.') }}
+                                    @endif
                                 </td>
                             </tr>
                         @empty

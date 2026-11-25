@@ -80,7 +80,7 @@
                     @forelse ($purchases as $item)
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-3 px-4">
-                                <span class="font-bold text-slate-900 font-mono block">#{{ $item->purchase_number }}</span>
+                                <span class="font-bold text-slate-900 block">#{{ $item->purchase_number }}</span>
                                 <span class="text-2xs text-slate-400">{{ $item->purchase_date->format('d/m/Y') }}</span>
                             </td>
 
@@ -268,7 +268,7 @@
                                             wire:model="items.{{ $idx }}.unit_cost"
                                             min="0"
                                             placeholder="Harga Satuan"
-                                            class="w-full rounded-lg border-slate-200 text-xs py-1.5 focus:border-primary-500 focus:ring-primary-500 font-mono"
+                                            class="w-full rounded-lg border-slate-200 text-xs py-1.5 focus:border-primary-500 focus:ring-primary-500"
                                         />
                                     </div>
 
@@ -382,7 +382,7 @@
                                 type="text"
                                 wire:model="pay_ref"
                                 placeholder="Contoh: TF-BCA-987"
-                                class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500 font-mono"
+                                class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
                             />
                         </div>
                     </div>

@@ -37,9 +37,16 @@ class OrderIndex extends Component
 
     public function render(TenantContext $tenantContext)
     {
-        $technicians = TechnicianProfile::with('user')->get();
+        $isTechnician = $tenantContext->isTechnician();
+        $userId = auth()->id();
 
-        $orders = ServiceOrder::with(['customer', 'device', 'technician'])
+        $technicians = $isTechnician
+            ? collect()
+            : TechnicianProfile::with('user')->get();
+
+        $baseScope = fn () => ServiceOrder::when($isTechnician, fn ($query) => $query->where('technician_id', $userId));
+
+        $orders = $baseScope()->with(['customer', 'device', 'technician'])
             ->when($this->search, function ($query) {
                 $search = trim($this->search);
                 $query->where(function ($q) use ($search) {
@@ -55,33 +62,27 @@ class OrderIndex extends Component
                         });
                 });
             })
-            ->when($this->statusFilter, function ($query) {
-                if ($this->statusFilter === 'active_queue') {
-                    $query->whereIn('status', ['received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending']);
-                } else {
-                    $query->where('status', $this->statusFilter);
-                }
-            })
-            ->when($this->technicianFilter, fn ($q) => $q->where('technician_id', $this->technicianFilter))
+            ->when($this->statusFilter, fn ($query) => $query->where('status', $this->statusFilter))
+            ->when(! $isTechnician && $this->technicianFilter, fn ($q) => $q->where('technician_id', $this->technicianFilter))
             ->latest()
             ->paginate(12);
 
         $now = now();
-        $thisMonthCount = ServiceOrder::whereMonth('created_at', $now->month)->whereYear('created_at', $now->year)->count();
-        $lastMonthCount = ServiceOrder::whereMonth('created_at', $now->copy()->subMonth()->month)->whereYear('created_at', $now->copy()->subMonth()->year)->count();
+        $thisMonthCount = $baseScope()->whereMonth('created_at', $now->month)->whereYear('created_at', $now->year)->count();
+        $lastMonthCount = $baseScope()->whereMonth('created_at', $now->copy()->subMonth()->month)->whereYear('created_at', $now->copy()->subMonth()->year)->count();
         $monthGrowth = $lastMonthCount > 0
             ? round((($thisMonthCount - $lastMonthCount) / $lastMonthCount) * 100, 1)
             : ($thisMonthCount > 0 ? 100 : 0);
 
-        $completedToday = ServiceOrder::where('status', 'completed')->whereDate('completed_at', today())->count();
-        $completedYesterday = ServiceOrder::where('status', 'completed')->whereDate('completed_at', today()->subDay())->count();
+        $completedToday = $baseScope()->where('status', 'completed')->whereDate('completed_at', today())->count();
+        $completedYesterday = $baseScope()->where('status', 'completed')->whereDate('completed_at', today()->subDay())->count();
         $completedGrowth = $completedYesterday > 0
             ? round((($completedToday - $completedYesterday) / $completedYesterday) * 100, 1)
             : ($completedToday > 0 ? 100 : 0);
 
         $stats = [
-            'total_active' => ServiceOrder::whereIn('status', ['received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending'])->count(),
-            'waiting_pickup' => ServiceOrder::where('status', 'ready_for_pickup')->count(),
+            'total_active' => $baseScope()->whereIn('status', ['received', 'diagnosing', 'waiting_approval', 'in_progress', 'waiting_parts', 'testing', 'pending'])->count(),
+            'waiting_pickup' => $baseScope()->where('status', 'ready_for_pickup')->count(),
             'completed_today' => $completedToday,
             'completed_growth' => $completedGrowth,
             'total_month' => $thisMonthCount,
@@ -92,6 +93,7 @@ class OrderIndex extends Component
             'orders' => $orders,
             'technicians' => $technicians,
             'stats' => $stats,
+            'isTechnician' => $isTechnician,
         ]);
     }
 }

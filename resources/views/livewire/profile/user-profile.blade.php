@@ -139,7 +139,7 @@
                     </div>
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-slate-500">User ID (ULID):</span>
-                        <span class="font-mono text-3xs text-slate-600 truncate max-w-[140px]">{{ $user->id ?? '-' }}</span>
+                        <span class="text-3xs text-slate-600 truncate max-w-[140px]">{{ $user->id ?? '-' }}</span>
                     </div>
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-slate-500">Terdaftar Sejak:</span>

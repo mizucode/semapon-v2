@@ -82,35 +82,35 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', UserProfile::class)->name('profile');
         Route::get('/settings/store', StoreSettings::class)->middleware('role:owner')->name('settings.store');
 
-        // Customer Management
-        Route::get('/customers', CustomerIndex::class)->name('customers.index');
-        Route::get('/customers/{id}', CustomerDetail::class)->name('customers.show');
+        // Customer Management (Owner & Admin only)
+        Route::get('/customers', CustomerIndex::class)->middleware('role:owner,admin')->name('customers.index');
+        Route::get('/customers/{id}', CustomerDetail::class)->middleware('role:owner,admin')->name('customers.show');
 
-        // Service Catalog
+        // Service Catalog (Read-only for Technician, CRUD for Owner & Admin)
         Route::get('/services', ServiceCatalog::class)->name('services.index');
 
         // Service Orders
         Route::get('/orders', OrderIndex::class)->name('orders.index');
-        Route::get('/orders/create', CreateOrder::class)->name('orders.create');
+        Route::get('/orders/create', CreateOrder::class)->middleware('role:owner,admin')->name('orders.create');
         Route::get('/orders/{id}', OrderDetail::class)->name('orders.show');
-        Route::get('/orders/{id}/edit', EditOrder::class)->name('orders.edit');
+        Route::get('/orders/{id}/edit', EditOrder::class)->middleware('role:owner,admin')->name('orders.edit');
         Route::get('/orders/{id}/print', PrintReceipt::class)->name('orders.print');
 
-        // Inventory & Spareparts
+        // Inventory & Spareparts (Read-only for Technician, CRUD for Owner & Admin)
         Route::get('/inventory', ProductIndex::class)->name('inventory.index');
 
-        // Supplier & Purchase
-        Route::get('/suppliers', SupplierIndex::class)->name('suppliers.index');
-        Route::get('/purchases', PurchaseIndex::class)->name('purchases.index');
+        // Supplier & Purchase (Owner & Admin only)
+        Route::get('/suppliers', SupplierIndex::class)->middleware('role:owner,admin')->name('suppliers.index');
+        Route::get('/purchases', PurchaseIndex::class)->middleware('role:owner,admin')->name('purchases.index');
 
-        // Finances & Cash Ledger (Owner & Admin)
+        // Finances & Cash Ledger (Owner only)
         Route::get('/finances', FinanceIndex::class)->middleware('role:owner')->name('finances.index');
 
         // Reports & Analytics (Owner only)
         Route::get('/reports', ReportDashboard::class)->middleware('role:owner')->name('reports.index');
 
-        // Reminders & Notifications
-        Route::get('/notifications', NotificationList::class)->name('notifications.index');
+        // Reminders & Notifications (Owner & Admin only)
+        Route::get('/notifications', NotificationList::class)->middleware('role:owner,admin')->name('notifications.index');
 
         // Subscriptions & Plans (Owner only)
         Route::get('/subscriptions', SubscriptionManager::class)->middleware('role:owner')->name('subscriptions.index');

@@ -91,6 +91,8 @@ class EditOrder extends Component
 
     public function mount(string $id): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $this->order = ServiceOrder::with(['customer', 'device'])->findOrFail($id);
 
         if ($this->order->customer) {

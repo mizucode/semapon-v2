@@ -33,24 +33,65 @@ class TechnicianIndex extends Component
 
     public string $specialization = 'All-Round';
 
-    public string $commission_type = 'percentage'; // percentage, fixed, profit_split
+    public string $employment_type = 'salary'; // salary (Karyawan / Gaji), commission (Komisi)
 
-    public float $commission_rate = 30.0;
+    public string $commission_type = 'salary'; // salary, percentage, fixed, profit_split
+
+    public float $commission_rate = 0.0;
 
     public string $notes = '';
 
     public string $new_password = '';
 
+    public function updatedEmploymentType(string $value): void
+    {
+        if ($value === 'salary') {
+            $this->commission_type = 'salary';
+            $this->commission_rate = 0.0;
+        } elseif ($this->commission_type === 'salary') {
+            $this->commission_type = 'percentage';
+            $this->commission_rate = 30.0;
+        }
+    }
+
+    public function updatedCommissionType(string $value): void
+    {
+        if ($value === 'salary') {
+            $this->employment_type = 'salary';
+            $this->commission_rate = 0.0;
+        } else {
+            $this->employment_type = 'commission';
+        }
+    }
+
+    protected function normalizeCompensationScheme(): void
+    {
+        if ($this->employment_type === 'salary' || $this->commission_type === 'salary') {
+            $this->employment_type = 'salary';
+            $this->commission_type = 'salary';
+            $this->commission_rate = 0.0;
+        } else {
+            $this->employment_type = 'commission';
+        }
+    }
+
     protected function rules(): array
     {
+        $isSalary = $this->employment_type === 'salary';
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8'],
             'specialization' => ['required', 'string', 'max:100'],
-            'commission_type' => ['required', 'in:percentage,fixed,profit_split'],
-            'commission_rate' => ['required', 'numeric', 'min:0'],
+            'employment_type' => ['required', 'in:salary,commission'],
+            'commission_type' => $isSalary
+                ? ['required', 'in:salary']
+                : ['required', 'in:percentage,fixed,profit_split'],
+            'commission_rate' => $isSalary
+                ? ['nullable', 'numeric', 'min:0']
+                : ['required', 'numeric', 'gt:0'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -71,8 +112,9 @@ class TechnicianIndex extends Component
 
         $this->reset(['name', 'email', 'phone', 'password', 'notes', 'editingTechnicianId']);
         $this->specialization = 'All-Round';
-        $this->commission_type = 'percentage';
-        $this->commission_rate = 30.0;
+        $this->employment_type = 'salary';
+        $this->commission_type = 'salary';
+        $this->commission_rate = 0.0;
         $this->resetValidation();
         $this->showCreateModal = true;
     }
@@ -87,6 +129,7 @@ class TechnicianIndex extends Component
             return;
         }
 
+        $this->normalizeCompensationScheme();
         $validated = $this->validate();
 
         DB::transaction(function () use ($store, $validated) {
@@ -126,7 +169,7 @@ class TechnicianIndex extends Component
                     'membership_id' => $membership->id,
                     'specialization' => $validated['specialization'],
                     'commission_type' => $validated['commission_type'],
-                    'commission_rate' => $validated['commission_rate'],
+                    'commission_rate' => $validated['employment_type'] === 'salary' ? 0 : (float) $validated['commission_rate'],
                     'notes' => $validated['notes'] ?: null,
                 ]
             );
@@ -149,8 +192,9 @@ class TechnicianIndex extends Component
         $this->email = $tech->user->email;
         $this->phone = $tech->user->phone ?? '';
         $this->specialization = $tech->specialization ?? 'All-Round';
+        $this->employment_type = $tech->isSalaried() ? 'salary' : 'commission';
         $this->commission_type = $tech->commission_type;
-        $this->commission_rate = (float) $tech->commission_rate;
+        $this->commission_rate = $tech->isSalaried() ? 0.0 : (float) $tech->commission_rate;
         $this->notes = $tech->notes ?? '';
 
         $this->resetValidation();
@@ -161,12 +205,20 @@ class TechnicianIndex extends Component
     {
         $tech = TechnicianProfile::with('user')->findOrFail($this->editingTechnicianId);
 
+        $this->normalizeCompensationScheme();
+        $isSalary = $this->employment_type === 'salary';
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
             'specialization' => ['required', 'string', 'max:100'],
-            'commission_type' => ['required', 'in:percentage,fixed,profit_split'],
-            'commission_rate' => ['required', 'numeric', 'min:0'],
+            'employment_type' => ['required', 'in:salary,commission'],
+            'commission_type' => $isSalary
+                ? ['required', 'in:salary']
+                : ['required', 'in:percentage,fixed,profit_split'],
+            'commission_rate' => $isSalary
+                ? ['nullable', 'numeric', 'min:0']
+                : ['required', 'numeric', 'gt:0'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -178,7 +230,7 @@ class TechnicianIndex extends Component
         $tech->update([
             'specialization' => $validated['specialization'],
             'commission_type' => $validated['commission_type'],
-            'commission_rate' => $validated['commission_rate'],
+            'commission_rate' => $isSalary ? 0 : (float) $validated['commission_rate'],
             'notes' => $validated['notes'] ?: null,
         ]);
 

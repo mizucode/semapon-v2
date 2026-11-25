@@ -2,10 +2,14 @@
 
 namespace App\Livewire\Order;
 
+use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceOrder;
 use App\Models\TechnicianProfile;
 use App\Services\FinanceService;
+use App\Services\InventoryService;
+use App\Services\TenantContext;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -18,8 +22,6 @@ class OrderDetail extends Component
 
     // Modals
     public bool $showAddItemModal = false;
-
-    public bool $showDiagnosisModal = false;
 
     public bool $showPaymentModal = false;
 
@@ -98,24 +100,15 @@ class OrderDetail extends Component
     // Item form fields
     public ?string $selected_service_id = null;
 
+    public ?string $selected_product_id = null;
+
+    public int $part_quantity = 1;
+
+    public string $part_search = '';
+
     public string $item_name = '';
 
     public float $item_price = 0;
-
-    // Diagnosis form fields
-    public string $diagnosis_notes = '';
-
-    public string $action_taken = '';
-
-    public array $testing_checklist = [
-        'lcd' => true,
-        'touch' => true,
-        'charging' => true,
-        'battery' => true,
-        'camera' => true,
-        'mic_speaker' => true,
-        'signal_wifi' => true,
-    ];
 
     // Payment fields
     public float $payment_amount = 0;
@@ -134,10 +127,14 @@ class OrderDetail extends Component
             'device',
             'technician',
             'items.service',
-            'diagnoses.technician',
+            'items.orderPart.product',
             'histories.user',
             'payments.user',
         ])->findOrFail($id);
+
+        if (app(TenantContext::class)->isTechnician() && $this->order->technician_id !== Auth::id()) {
+            abort(403, 'Order servis ini tidak ditugaskan kepada Anda.');
+        }
 
         $this->assigned_technician_id = $this->order->technician_id;
         $this->payment_amount = $this->order->remaining_balance;
@@ -151,7 +148,7 @@ class OrderDetail extends Component
             'device',
             'technician',
             'items.service',
-            'diagnoses.technician',
+            'items.orderPart.product',
             'histories.user',
         ]);
 
@@ -186,69 +183,177 @@ class OrderDetail extends Component
 
     public function openAddItemModal(): void
     {
-        $this->reset(['selected_service_id', 'item_name', 'item_price']);
+        $this->reset([
+            'selected_service_id',
+            'selected_product_id',
+            'part_search',
+            'item_name',
+            'item_price',
+        ]);
+        $this->part_quantity = 1;
         $this->resetValidation();
         $this->showAddItemModal = true;
     }
 
-    public function onServiceSelected(): void
+    protected function recalculateDraftItem(): void
     {
-        if ($this->selected_service_id) {
-            $service = Service::find($this->selected_service_id);
-            if ($service) {
-                $this->item_name = $service->name;
-                $this->item_price = (float) $service->price;
-            }
+        $service = $this->selected_service_id
+            ? Service::find($this->selected_service_id)
+            : null;
+
+        $product = $this->selected_product_id
+            ? Product::find($this->selected_product_id)
+            : null;
+
+        $qty = max(1, (int) $this->part_quantity);
+        if ($product && $product->stock > 0 && $qty > $product->stock) {
+            $qty = $product->stock;
         }
+        $this->part_quantity = $qty;
+
+        if ($service && $product) {
+            $qtySuffix = $qty > 1 ? " x{$qty}" : '';
+            $this->item_name = "{$service->name} ({$product->name}{$qtySuffix})";
+        } elseif ($service) {
+            $this->item_name = $service->name;
+        } elseif ($product) {
+            $this->item_name = $qty > 1
+                ? "{$product->name} ({$qty} {$product->unit})"
+                : $product->name;
+        } else {
+            $this->item_name = '';
+        }
+
+        $servicePrice = $service ? (float) $service->price : 0.0;
+        $partPrice = $product ? ((float) $product->sell_price * $qty) : 0.0;
+        $this->item_price = $servicePrice + $partPrice;
     }
 
-    public function addItem(): void
+    public function onServiceSelected(): void
+    {
+        $this->recalculateDraftItem();
+    }
+
+    public function updatedSelectedServiceId(): void
+    {
+        $this->recalculateDraftItem();
+    }
+
+    public function selectCatalogService(?string $serviceId = null): void
+    {
+        $this->selected_service_id = $serviceId ?: null;
+        $this->recalculateDraftItem();
+        $this->resetValidation(['item_name', 'item_price']);
+    }
+
+    public function selectSparepart(?string $productId = null): void
+    {
+        $this->selected_product_id = $productId ?: null;
+        $this->part_quantity = 1;
+        $this->part_search = '';
+        $this->recalculateDraftItem();
+        $this->resetValidation(['selected_product_id', 'part_quantity', 'item_name', 'item_price']);
+    }
+
+    public function updatedPartQuantity(): void
+    {
+        $this->recalculateDraftItem();
+    }
+
+    public function incrementPartQuantity(): void
+    {
+        $this->part_quantity = max(1, $this->part_quantity + 1);
+        $this->recalculateDraftItem();
+    }
+
+    public function decrementPartQuantity(): void
+    {
+        $this->part_quantity = max(1, $this->part_quantity - 1);
+        $this->recalculateDraftItem();
+    }
+
+    public function addItem(InventoryService $inventoryService): void
     {
         $this->validate([
             'item_name' => ['required', 'string', 'max:255'],
             'item_price' => ['required', 'numeric', 'min:0'],
+            'selected_product_id' => ['nullable', 'exists:products,id'],
+            'part_quantity' => ['required_with:selected_product_id', 'integer', 'min:1'],
+        ], [
+            'item_name.required' => 'Nama layanan atau sparepart wajib diisi.',
+            'item_price.required' => 'Nominal biaya wajib diisi.',
+            'item_price.min' => 'Nominal biaya tidak boleh negatif.',
+            'part_quantity.min' => 'Jumlah sparepart minimal 1.',
         ]);
 
-        DB::transaction(function () {
-            $this->order->items()->create([
-                'store_id' => $this->order->store_id,
-                'service_id' => $this->selected_service_id ?: null,
-                'name' => $this->item_name,
-                'price' => $this->item_price,
-                'technician_id' => $this->order->technician_id,
-            ]);
+        try {
+            DB::transaction(function () use ($inventoryService) {
+                $orderPart = null;
 
-            // Recalculate total cost
-            $totalCost = $this->order->items()->sum('price');
-            $this->order->total_cost = $totalCost;
+                if ($this->selected_product_id) {
+                    $product = Product::findOrFail($this->selected_product_id);
+                    $orderPart = $inventoryService->deductPartForOrderItem(
+                        $this->order,
+                        $product,
+                        $this->part_quantity,
+                        Auth::id()
+                    );
+                }
 
-            // Update payment status
-            if ($this->order->paid_amount >= $totalCost && $totalCost > 0) {
-                $this->order->payment_status = 'paid';
-            } elseif ($this->order->paid_amount > 0) {
-                $this->order->payment_status = 'partially_paid';
-            } else {
-                $this->order->payment_status = 'unpaid';
-            }
+                $this->order->items()->create([
+                    'store_id' => $this->order->store_id,
+                    'service_id' => $this->selected_service_id ?: null,
+                    'service_order_part_id' => $orderPart?->id,
+                    'name' => trim($this->item_name),
+                    'price' => $this->item_price,
+                    'technician_id' => $this->order->technician_id,
+                ]);
 
-            $this->order->save();
-        });
+                // Recalculate total cost
+                $totalCost = $this->order->items()->sum('price');
+                $this->order->total_cost = $totalCost;
+                if ($totalCost > 0) {
+                    $this->order->is_cost_undetermined = false;
+                }
 
+                // Update payment status
+                if ($this->order->paid_amount >= $totalCost && $totalCost > 0) {
+                    $this->order->payment_status = 'paid';
+                } elseif ($this->order->paid_amount > 0) {
+                    $this->order->payment_status = 'partially_paid';
+                } else {
+                    $this->order->payment_status = 'unpaid';
+                }
+
+                $this->order->save();
+            });
+        } catch (Exception $e) {
+            $this->addError('selected_product_id', $e->getMessage());
+
+            return;
+        }
+
+        $savedItemName = trim($this->item_name);
         $this->showAddItemModal = false;
-        $this->order->load('items');
+        $this->order->load(['items.service', 'items.orderPart.product']);
         $this->payment_amount = $this->order->remaining_balance;
 
         $this->dispatch('toast', [
             'type' => 'success',
-            'title' => 'Layanan Ditambahkan',
-            'message' => "Item '{$this->item_name}' berhasil ditambahkan ke rincian biaya.",
+            'title' => 'Biaya Ditambahkan',
+            'message' => "Item '{$savedItemName}' berhasil ditambahkan ke rincian biaya.",
         ]);
     }
 
-    public function removeItem(string $itemId): void
+    public function removeItem(string $itemId, InventoryService $inventoryService): void
     {
-        DB::transaction(function () use ($itemId) {
-            $item = $this->order->items()->findOrFail($itemId);
+        DB::transaction(function () use ($itemId, $inventoryService) {
+            $item = $this->order->items()->with('orderPart')->findOrFail($itemId);
+
+            if ($item->orderPart) {
+                $inventoryService->returnPartFromOrder($item->orderPart, Auth::id());
+            }
+
             $item->delete();
 
             $totalCost = $this->order->items()->sum('price');
@@ -265,38 +370,13 @@ class OrderDetail extends Component
             $this->order->save();
         });
 
-        $this->order->load('items');
+        $this->order->load(['items.service', 'items.orderPart.product']);
         $this->payment_amount = $this->order->remaining_balance;
 
         $this->dispatch('toast', [
             'type' => 'info',
             'title' => 'Item Dihapus',
             'message' => 'Rincian biaya berhasil diperbarui.',
-        ]);
-    }
-
-    public function saveDiagnosis(): void
-    {
-        $this->validate([
-            'diagnosis_notes' => ['required', 'string', 'max:1000'],
-            'action_taken' => ['nullable', 'string', 'max:1000'],
-        ]);
-
-        $this->order->diagnoses()->create([
-            'store_id' => $this->order->store_id,
-            'technician_id' => Auth::id(),
-            'diagnosis_notes' => $this->diagnosis_notes,
-            'testing_checklist' => $this->testing_checklist,
-            'action_taken' => $this->action_taken ?: null,
-        ]);
-
-        $this->showDiagnosisModal = false;
-        $this->order->load('diagnoses.technician');
-
-        $this->dispatch('toast', [
-            'type' => 'success',
-            'title' => 'Diagnosa Disimpan',
-            'message' => 'Hasil diagnosa teknisi dan checklist pengujian telah dicatat.',
         ]);
     }
 
@@ -339,6 +419,8 @@ class OrderDetail extends Component
 
     public function assignTechnician(): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $this->order->update([
             'technician_id' => $this->assigned_technician_id ?: null,
         ]);
@@ -363,11 +445,17 @@ class OrderDetail extends Component
         ]);
     }
 
-    public function deleteOrder(): mixed
+    public function deleteOrder(InventoryService $inventoryService): mixed
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $orderNumber = $this->order->order_number;
 
-        DB::transaction(function () {
+        DB::transaction(function () use ($inventoryService) {
+            foreach ($this->order->parts()->get() as $part) {
+                $inventoryService->returnPartFromOrder($part, Auth::id());
+            }
+
             $this->order->delete();
         });
 
@@ -378,11 +466,31 @@ class OrderDetail extends Component
 
     public function render()
     {
+        $isTechnician = app(TenantContext::class)->isTechnician();
         $availableServices = Service::where('is_active', true)->get();
-        $technicians = TechnicianProfile::with('user')->get();
+        $availableProducts = Product::where('is_active', true)
+            ->where('stock', '>', 0)
+            ->when($this->part_search, function ($query) {
+                $search = trim($this->part_search);
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->limit(50)
+            ->get();
+        $selectedProduct = $this->selected_product_id
+            ? Product::find($this->selected_product_id)
+            : null;
+        $technicians = $isTechnician ? collect() : TechnicianProfile::with('user')->get();
 
         return view('livewire.order.order-detail', [
+            'isTechnician' => $isTechnician,
             'availableServices' => $availableServices,
+            'availableProducts' => $availableProducts,
+            'selectedProduct' => $selectedProduct,
             'technicians' => $technicians,
             'statusOptions' => self::STATUS_OPTIONS,
             'statusLabels' => collect(self::STATUS_OPTIONS)->mapWithKeys(fn ($opt, $k) => [$k => $opt['badge']])->all(),

@@ -90,7 +90,7 @@
                             </div>
                             <div>
                                 <h3 class="font-bold text-sm text-slate-900">{{ $tech->user->name }}</h3>
-                                <p class="text-2xs text-slate-500 font-mono">{{ $tech->user->phone ?: $tech->user->email }}</p>
+                                <p class="text-2xs text-slate-500">{{ $tech->user->phone ?: $tech->user->email }}</p>
                             </div>
                         </div>
                         <x-badge :variant="$tech->isActive() ? 'success' : 'slate'">
@@ -100,21 +100,35 @@
 
                     <div class="p-3 bg-slate-50 rounded-xl space-y-2 text-xs">
                         <div class="flex items-center justify-between">
+                            <span class="text-slate-500">Tipe Staf:</span>
+                            @if($tech->isSalaried())
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-semibold bg-slate-200/80 text-slate-700">
+                                    Karyawan (Gaji)
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-semibold bg-primary-50 text-primary-700">
+                                    Sistem Komisi
+                                </span>
+                            @endif
+                        </div>
+                        <div class="flex items-center justify-between">
                             <span class="text-slate-500">Spesialisasi:</span>
                             <span class="font-semibold text-slate-800">{{ $tech->specialization }}</span>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-500">Skema Komisi:</span>
-                            <span class="font-semibold text-primary-700">
-                                @if($tech->commission_type === 'percentage')
-                                    {{ $tech->commission_rate }}% Jasa Servis
-                                @elseif($tech->commission_type === 'fixed')
-                                    Rp{{ number_format($tech->commission_rate, 0, ',', '.') }} / Unit
-                                @else
-                                    {{ $tech->commission_rate }}% Bagi Hasil Laba
-                                @endif
-                            </span>
-                        </div>
+                        @if(!$tech->isSalaried())
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500">Skema Komisi:</span>
+                                <span class="font-semibold text-primary-700">
+                                    @if($tech->commission_type === 'percentage')
+                                        {{ $tech->commission_rate }}% Jasa Servis
+                                    @elseif($tech->commission_type === 'fixed')
+                                        Rp{{ number_format($tech->commission_rate, 0, ',', '.') }} / Unit
+                                    @else
+                                        {{ $tech->commission_rate }}% Bagi Hasil Laba
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
                         <div class="flex items-center justify-between">
                             <span class="text-slate-500">Selesai Dikerjakan:</span>
                             <span class="font-bold text-slate-900">{{ $tech->total_jobs_completed }} Unit</span>
@@ -228,46 +242,91 @@
                         @error('password') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label for="t_spec" class="block text-xs font-semibold text-slate-700 mb-1">Spesialisasi</label>
-                            <select
-                                wire:model="specialization"
-                                id="t_spec"
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
-                            >
-                                <option value="All-Round">All-Round (Semua)</option>
-                                <option value="Hardware / IC">Hardware / IC Mesin</option>
-                                <option value="Ganti LCD / Kaca">Ganti LCD / Kaca</option>
-                                <option value="Software / Flashing">Software / Flashing</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="t_comm_type" class="block text-xs font-semibold text-slate-700 mb-1">Model Komisi</label>
-                            <select
-                                wire:model="commission_type"
-                                id="t_comm_type"
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
-                            >
-                                <option value="percentage">Persentase (%) Jasa</option>
-                                <option value="fixed">Nominal Tetap (Rp)</option>
-                                <option value="profit_split">Bagi Hasil Laba (%)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="t_comm_rate" class="block text-xs font-semibold text-slate-700 mb-1">Besaran / Rate</label>
-                            <input
-                                wire:model="commission_rate"
-                                type="number"
-                                step="any"
-                                id="t_comm_rate"
-                                required
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
-                            >
-                        </div>
+                    <div>
+                        <label for="t_spec" class="block text-xs font-semibold text-slate-700 mb-1">Spesialisasi</label>
+                        <select
+                            wire:model="specialization"
+                            id="t_spec"
+                            class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                        >
+                            <option value="All-Round">All-Round (Semua)</option>
+                            <option value="Hardware / IC">Hardware / IC Mesin</option>
+                            <option value="Ganti LCD / Kaca">Ganti LCD / Kaca</option>
+                            <option value="Software / Flashing">Software / Flashing</option>
+                        </select>
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status / Sistem Kerja <span class="text-rose-500">*</span></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                wire:click="$set('employment_type', 'salary')"
+                                class="p-3 rounded-xl border text-left transition-all cursor-pointer {{ $employment_type === 'salary' ? 'border-primary-500 bg-primary-50/60 ring-2 ring-primary-500/15' : 'border-slate-200 bg-white hover:border-slate-300' }}"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold {{ $employment_type === 'salary' ? 'text-primary-700' : 'text-slate-800' }}">Karyawan</span>
+                                    <span class="w-4 h-4 rounded-full border flex items-center justify-center {{ $employment_type === 'salary' ? 'border-primary-600 bg-primary-600' : 'border-slate-300' }}">
+                                        @if($employment_type === 'salary')
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <p class="text-2xs text-slate-500 mt-1 leading-snug">Sistem gaji tetap, tanpa komisi servis.</p>
+                            </button>
+
+                            <button
+                                type="button"
+                                wire:click="$set('employment_type', 'commission')"
+                                class="p-3 rounded-xl border text-left transition-all cursor-pointer {{ $employment_type === 'commission' ? 'border-primary-500 bg-primary-50/60 ring-2 ring-primary-500/15' : 'border-slate-200 bg-white hover:border-slate-300' }}"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold {{ $employment_type === 'commission' ? 'text-primary-700' : 'text-slate-800' }}">Komisi</span>
+                                    <span class="w-4 h-4 rounded-full border flex items-center justify-center {{ $employment_type === 'commission' ? 'border-primary-600 bg-primary-600' : 'border-slate-300' }}">
+                                        @if($employment_type === 'commission')
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <p class="text-2xs text-slate-500 mt-1 leading-snug">Bagi hasil / komisi per unit selesai.</p>
+                            </button>
+                        </div>
+                        @error('employment_type') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    @if($employment_type === 'commission')
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                            <div>
+                                <label for="t_comm_type" class="block text-xs font-semibold text-slate-700 mb-1">Model Komisi <span class="text-rose-500">*</span></label>
+                                <select
+                                    wire:model.live="commission_type"
+                                    id="t_comm_type"
+                                    class="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                                >
+                                    <option value="percentage">Persentase (%) Jasa</option>
+                                    <option value="fixed">Nominal Tetap (Rp)</option>
+                                    <option value="profit_split">Bagi Hasil Laba (%)</option>
+                                </select>
+                                @error('commission_type') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
+                                <label for="t_comm_rate" class="block text-xs font-semibold text-slate-700 mb-1">
+                                    {{ $commission_type === 'fixed' ? 'Nominal Komisi (Rp)' : 'Persentase Komisi (%)' }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    wire:model="commission_rate"
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    id="t_comm_rate"
+                                    required
+                                    class="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                                >
+                                @error('commission_rate') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="pt-3 flex justify-end space-x-2">
                         <x-button type="button" variant="outline" size="sm" @click="$wire.showCreateModal = false">
@@ -324,46 +383,91 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                            <label for="et_spec" class="block text-xs font-semibold text-slate-700 mb-1">Spesialisasi</label>
-                            <select
-                                wire:model="specialization"
-                                id="et_spec"
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
-                            >
-                                <option value="All-Round">All-Round (Semua)</option>
-                                <option value="Hardware / IC">Hardware / IC Mesin</option>
-                                <option value="Ganti LCD / Kaca">Ganti LCD / Kaca</option>
-                                <option value="Software / Flashing">Software / Flashing</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="et_comm_type" class="block text-xs font-semibold text-slate-700 mb-1">Model Komisi</label>
-                            <select
-                                wire:model="commission_type"
-                                id="et_comm_type"
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
-                            >
-                                <option value="percentage">Persentase (%) Jasa</option>
-                                <option value="fixed">Nominal Tetap (Rp)</option>
-                                <option value="profit_split">Bagi Hasil Laba (%)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="et_comm_rate" class="block text-xs font-semibold text-slate-700 mb-1">Besaran / Rate</label>
-                            <input
-                                wire:model="commission_rate"
-                                type="number"
-                                step="any"
-                                id="et_comm_rate"
-                                required
-                                class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
-                            >
-                        </div>
+                    <div>
+                        <label for="et_spec" class="block text-xs font-semibold text-slate-700 mb-1">Spesialisasi</label>
+                        <select
+                            wire:model="specialization"
+                            id="et_spec"
+                            class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                        >
+                            <option value="All-Round">All-Round (Semua)</option>
+                            <option value="Hardware / IC">Hardware / IC Mesin</option>
+                            <option value="Ganti LCD / Kaca">Ganti LCD / Kaca</option>
+                            <option value="Software / Flashing">Software / Flashing</option>
+                        </select>
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status / Sistem Kerja <span class="text-rose-500">*</span></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                wire:click="$set('employment_type', 'salary')"
+                                class="p-3 rounded-xl border text-left transition-all cursor-pointer {{ $employment_type === 'salary' ? 'border-primary-500 bg-primary-50/60 ring-2 ring-primary-500/15' : 'border-slate-200 bg-white hover:border-slate-300' }}"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold {{ $employment_type === 'salary' ? 'text-primary-700' : 'text-slate-800' }}">Karyawan</span>
+                                    <span class="w-4 h-4 rounded-full border flex items-center justify-center {{ $employment_type === 'salary' ? 'border-primary-600 bg-primary-600' : 'border-slate-300' }}">
+                                        @if($employment_type === 'salary')
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <p class="text-2xs text-slate-500 mt-1 leading-snug">Sistem gaji tetap, tanpa komisi servis.</p>
+                            </button>
+
+                            <button
+                                type="button"
+                                wire:click="$set('employment_type', 'commission')"
+                                class="p-3 rounded-xl border text-left transition-all cursor-pointer {{ $employment_type === 'commission' ? 'border-primary-500 bg-primary-50/60 ring-2 ring-primary-500/15' : 'border-slate-200 bg-white hover:border-slate-300' }}"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold {{ $employment_type === 'commission' ? 'text-primary-700' : 'text-slate-800' }}">Komisi</span>
+                                    <span class="w-4 h-4 rounded-full border flex items-center justify-center {{ $employment_type === 'commission' ? 'border-primary-600 bg-primary-600' : 'border-slate-300' }}">
+                                        @if($employment_type === 'commission')
+                                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <p class="text-2xs text-slate-500 mt-1 leading-snug">Bagi hasil / komisi per unit selesai.</p>
+                            </button>
+                        </div>
+                        @error('employment_type') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    @if($employment_type === 'commission')
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                            <div>
+                                <label for="et_comm_type" class="block text-xs font-semibold text-slate-700 mb-1">Model Komisi <span class="text-rose-500">*</span></label>
+                                <select
+                                    wire:model.live="commission_type"
+                                    id="et_comm_type"
+                                    class="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                                >
+                                    <option value="percentage">Persentase (%) Jasa</option>
+                                    <option value="fixed">Nominal Tetap (Rp)</option>
+                                    <option value="profit_split">Bagi Hasil Laba (%)</option>
+                                </select>
+                                @error('commission_type') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
+                                <label for="et_comm_rate" class="block text-xs font-semibold text-slate-700 mb-1">
+                                    {{ $commission_type === 'fixed' ? 'Nominal Komisi (Rp)' : 'Persentase Komisi (%)' }} <span class="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    wire:model="commission_rate"
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    id="et_comm_rate"
+                                    required
+                                    class="block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-hidden"
+                                >
+                                @error('commission_rate') <p class="mt-1 text-2xs text-rose-600">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="pt-3 flex justify-end space-x-2">
                         <x-button type="button" variant="outline" size="sm" @click="$wire.showEditModal = false">

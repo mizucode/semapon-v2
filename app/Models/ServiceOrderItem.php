@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'store_id',
     'service_order_id',
     'service_id',
+    'service_order_part_id',
     'name',
     'price',
     'technician_id',
@@ -36,6 +37,11 @@ class ServiceOrderItem extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class, 'service_id');
+    }
+
+    public function orderPart(): BelongsTo
+    {
+        return $this->belongsTo(ServiceOrderPart::class, 'service_order_part_id');
     }
 
     public function technician(): BelongsTo

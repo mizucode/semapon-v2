@@ -3,18 +3,22 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Inventaris Sparepart & Aksesoris</h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Kelola stok suku cadang HP, barcode SKU, harga modal, dan log mutasi barang.</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                {{ $isTechnician ? 'Daftar ketersediaan stok suku cadang HP, aksesoris, dan harga jual toko.' : 'Kelola stok suku cadang HP, barcode SKU, harga modal, dan log mutasi barang.' }}
+            </p>
         </div>
-        <div>
-            <button
-                type="button"
-                wire:click="openCreateModal"
-                class="inline-flex items-center px-4 py-2.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-xs transition-colors"
-            >
-                <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i>
-                Tambah Barang Baru
-            </button>
-        </div>
+        @if (!$isTechnician)
+            <div>
+                <button
+                    type="button"
+                    wire:click="openCreateModal"
+                    class="inline-flex items-center px-4 py-2.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-xs transition-colors"
+                >
+                    <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i>
+                    Tambah Barang Baru
+                </button>
+            </div>
+        @endif
     </div>
 
     <!-- Quick Stats Cards -->
@@ -109,11 +113,15 @@
                     <tr>
                         <th class="py-3 px-4">Nama Produk & Kode</th>
                         <th class="py-3 px-4">Tipe & Kategori</th>
-                        <th class="py-3 px-4 text-right">Harga Modal</th>
+                        @if (!$isTechnician)
+                            <th class="py-3 px-4 text-right">Harga Modal</th>
+                        @endif
                         <th class="py-3 px-4 text-right">Harga Jual</th>
                         <th class="py-3 px-4 text-center">Stok</th>
                         <th class="py-3 px-4 text-center">Status</th>
-                        <th class="py-3 px-4 text-right">Aksi</th>
+                        @if (!$isTechnician)
+                            <th class="py-3 px-4 text-right">Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -121,7 +129,7 @@
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-3 px-4">
                                 <span class="font-bold text-slate-900 block text-xs">{{ $item->name }}</span>
-                                <span class="text-2xs text-slate-400 font-mono">
+                                <span class="text-2xs text-slate-400">
                                     {{ $item->sku ? 'SKU: ' . $item->sku : '' }}
                                     {{ $item->barcode ? ' • Barcode: ' . $item->barcode : '' }}
                                 </span>
@@ -136,9 +144,11 @@
                                 @endif
                             </td>
 
-                            <td class="py-3 px-4 text-right text-slate-600 font-medium">
-                                Rp{{ number_format($item->buy_price, 0, ',', '.') }}
-                            </td>
+                            @if (!$isTechnician)
+                                <td class="py-3 px-4 text-right text-slate-600 font-medium">
+                                    Rp{{ number_format($item->buy_price, 0, ',', '.') }}
+                                </td>
+                            @endif
 
                             <td class="py-3 px-4 text-right font-bold text-slate-900">
                                 Rp{{ number_format($item->sell_price, 0, ',', '.') }}
@@ -165,29 +175,31 @@
                                 @endif
                             </td>
 
-                            <td class="py-3 px-4 text-right space-x-1">
-                                <button
-                                    type="button"
-                                    wire:click="openStockAdjustModal('{{ $item->id }}')"
-                                    class="inline-flex items-center px-2.5 py-1 text-2xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-xl border border-primary-200 transition-colors"
-                                    title="Tambah / Atur Stok"
-                                >
-                                    <i data-lucide="layers" class="w-3 h-3 mr-1"></i>
-                                    Atur Stok
-                                </button>
-                                <button
-                                    type="button"
-                                    wire:click="openEditModal('{{ $item->id }}')"
-                                    class="p-1 text-slate-400 hover:text-slate-700 transition-colors"
-                                    title="Edit Produk"
-                                >
-                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </td>
+                            @if (!$isTechnician)
+                                <td class="py-3 px-4 text-right space-x-1">
+                                    <button
+                                        type="button"
+                                        wire:click="openStockAdjustModal('{{ $item->id }}')"
+                                        class="inline-flex items-center px-2.5 py-1 text-2xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-xl border border-primary-200 transition-colors"
+                                        title="Tambah / Atur Stok"
+                                    >
+                                        <i data-lucide="layers" class="w-3 h-3 mr-1"></i>
+                                        Atur Stok
+                                    </button>
+                                    <button
+                                        type="button"
+                                        wire:click="openEditModal('{{ $item->id }}')"
+                                        class="p-1 text-slate-400 hover:text-slate-700 transition-colors"
+                                        title="Edit Produk"
+                                    >
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-12 text-center text-slate-400">
+                            <td colspan="{{ $isTechnician ? 5 : 7 }}" class="py-12 text-center text-slate-400">
                                 <i data-lucide="package-search" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
                                 <p class="text-xs">Tidak ada data barang yang sesuai filter pencarian.</p>
                             </td>
@@ -205,7 +217,7 @@
     </div>
 
     <!-- Modal: Add / Edit Product -->
-    @if ($showProductModal)
+    @if (!$isTechnician && $showProductModal)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -264,7 +276,7 @@
                                 type="text"
                                 wire:model="sku"
                                 placeholder="LCD-IP11-OLED"
-                                class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500 font-mono"
+                                class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
                             />
                         </div>
 
@@ -274,7 +286,7 @@
                                 type="text"
                                 wire:model="barcode"
                                 placeholder="899123456789"
-                                class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500 font-mono"
+                                class="w-full rounded-xl border-slate-200 text-xs focus:border-primary-500 focus:ring-primary-500"
                             />
                         </div>
                     </div>
@@ -370,7 +382,7 @@
     @endif
 
     <!-- Modal: Quick Stock Adjustment / Stock-In -->
-    @if ($showStockAdjustModal && $selectedProductForStock)
+    @if (!$isTechnician && $showStockAdjustModal && $selectedProductForStock)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-200">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">

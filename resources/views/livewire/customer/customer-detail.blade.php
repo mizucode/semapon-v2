@@ -39,7 +39,7 @@
             <div class="space-y-3.5 text-xs">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                     <span class="text-slate-500">Nomor WhatsApp:</span>
-                    <span class="font-mono font-semibold text-slate-900">{{ $customer->phone }}</span>
+                    <span class="font-semibold text-slate-900">{{ $customer->phone }}</span>
                 </div>
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                     <span class="text-slate-500">Email:</span>
@@ -150,11 +150,11 @@
                         <div class="pt-2 border-t border-slate-100 space-y-1.5 text-2xs">
                             <div class="flex items-center justify-between">
                                 <span class="text-slate-400">IMEI:</span>
-                                <span class="font-mono text-slate-700">{{ $device->imei ?: '-' }}</span>
+                                <span class="text-slate-700">{{ $device->imei ?: '-' }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-slate-400">Pola/Passcode:</span>
-                                <span class="font-mono text-slate-700">{{ $device->passcode ?: '-' }}</span>
+                                <span class="text-slate-700">{{ $device->passcode ?: '-' }}</span>
                             </div>
                             @if($device->notes)
                                 <div class="pt-1 text-slate-500 italic">

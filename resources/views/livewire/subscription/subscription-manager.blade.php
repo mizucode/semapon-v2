@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="flex items-baseline gap-1">
-                        <span class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">
+                        <span class="text-2xl sm:text-3xl font-extrabold text-slate-900">
                             Rp{{ number_format($price, 0, ',', '.') }}
                         </span>
                         <span class="text-xs text-slate-500">/ {{ $billingCycle === 'yearly' ? 'tahun' : 'bulan' }}</span>
@@ -180,7 +180,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($invoices as $inv)
                         <tr class="hover:bg-slate-50/60">
-                            <td class="py-3 px-4 font-mono font-bold text-slate-900">#{{ $inv->invoice_number }}</td>
+                            <td class="py-3 px-4 font-bold text-slate-900">#{{ $inv->invoice_number }}</td>
                             <td class="py-3 px-4 font-medium">{{ $inv->plan?->name }}</td>
                             <td class="py-3 px-4 capitalize">{{ $inv->billing_cycle }}</td>
                             <td class="py-3 px-4 text-right font-bold">Rp{{ number_format($inv->amount, 0, ',', '.') }}</td>
@@ -262,7 +262,7 @@
                     <div class="space-y-4 text-xs">
                         <div class="p-4 rounded-2xl bg-primary-50 border border-primary-100 space-y-2 text-center">
                             <span class="text-2xs uppercase tracking-wider text-primary-800 font-semibold block">Total yang Harus Ditransfer</span>
-                            <span class="text-2xl font-bold font-mono text-primary-950 block">
+                            <span class="text-2xl font-bold text-primary-950 block">
                                 Rp{{ number_format($activeInvoice->amount, 0, ',', '.') }}
                             </span>
                             <span class="text-3xs text-primary-700 block">No. Invoice: #{{ $activeInvoice->invoice_number }}</span>
@@ -270,7 +270,7 @@
 
                         <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1.5">
                             <span class="font-bold text-slate-800 block text-2xs uppercase">Rekening Tujuan Transfer:</span>
-                            <p class="text-slate-700">Bank Central Asia (BCA): <strong class="font-mono">8801-9922-3344</strong></p>
+                            <p class="text-slate-700">Bank Central Asia (BCA): <strong>8801-9922-3344</strong></p>
                             <p class="text-slate-700">Atas Nama: <strong>PT SEMAPON TEKNOLOGI NUSANTARA</strong></p>
                         </div>
 

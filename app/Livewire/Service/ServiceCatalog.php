@@ -54,6 +54,8 @@ class ServiceCatalog extends Component
 
     public function openCreateServiceModal(TenantContext $tenantContext): void
     {
+        abort_if($tenantContext->isTechnician(), 403);
+
         $store = $tenantContext->getStore();
         $this->reset(['name', 'description', 'price', 'editingServiceId', 'category_id']);
         $this->estimated_duration_minutes = 60;
@@ -65,6 +67,8 @@ class ServiceCatalog extends Component
 
     public function saveService(): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $validated = $this->validate([
             'category_id' => ['nullable', 'exists:service_categories,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -95,6 +99,8 @@ class ServiceCatalog extends Component
 
     public function editService(string $id): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $service = Service::findOrFail($id);
         $this->editingServiceId = $service->id;
         $this->category_id = $service->category_id ?? '';
@@ -111,6 +117,8 @@ class ServiceCatalog extends Component
 
     public function toggleServiceStatus(string $id): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $service = Service::findOrFail($id);
         $service->update(['is_active' => ! $service->is_active]);
 
@@ -123,6 +131,8 @@ class ServiceCatalog extends Component
 
     public function createCategory(): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $this->validate([
             'new_category_name' => ['required', 'string', 'max:100'],
         ]);
@@ -141,8 +151,9 @@ class ServiceCatalog extends Component
         ]);
     }
 
-    public function render()
+    public function render(TenantContext $tenantContext)
     {
+        $isTechnician = $tenantContext->isTechnician();
         $categories = ServiceCategory::latest()->get();
 
         $services = Service::with('category')
@@ -152,6 +163,7 @@ class ServiceCatalog extends Component
             ->paginate(12);
 
         return view('livewire.service.service-catalog', [
+            'isTechnician' => $isTechnician,
             'services' => $services,
             'categories' => $categories,
         ]);

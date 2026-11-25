@@ -124,7 +124,7 @@
                         <tr class="hover:bg-slate-50/60 transition-colors">
                             <td class="py-3 px-4">
                                 <span class="font-bold text-slate-900 block text-xs">{{ $t->name }}</span>
-                                <span class="text-2xs font-mono text-slate-400">/{{ $t->slug }}</span>
+                                <span class="text-2xs text-slate-400">/{{ $t->slug }}</span>
                             </td>
 
                             <td class="py-3 px-4">

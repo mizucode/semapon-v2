@@ -58,7 +58,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
                 <div>
                     <span class="text-2xs font-semibold text-slate-400 uppercase tracking-wider block">Nomor Tanda Terima</span>
-                    <h1 class="text-xl sm:text-2xl font-bold font-mono text-slate-900">#{{ $order->order_number }}</h1>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900">#{{ $order->order_number }}</h1>
                 </div>
 
                 <div class="sm:text-right">
@@ -231,7 +231,7 @@
                             $imei = $order->device->imei_or_serial;
                             $maskedImei = strlen($imei) > 8 ? substr($imei, 0, 4) . '••••' . substr($imei, -4) : $imei;
                         @endphp
-                        <span class="font-mono text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 inline-block mt-0.5">
+                        <span class="text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 inline-block mt-0.5">
                             {{ $maskedImei }}
                         </span>
                     </div>
@@ -312,10 +312,10 @@
 
                 <div class="relative pl-7 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:-translate-x-1/2 before:bg-slate-200">
                     @foreach ($order->histories->sortByDesc('created_at') as $history)
-                        <div class="relative text-xs">
-                            <div class="absolute -left-4 top-1 w-3 h-3 -translate-x-1/2 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="font-bold text-slate-800">
+                        <div class="text-xs">
+                            <div class="relative flex items-center justify-between gap-2 min-h-4">
+                                <div class="absolute -left-4 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary-600 border-2 border-white ring-2 ring-primary-100"></div>
+                                <span class="font-bold text-slate-800 leading-none">
                                     {{ $statusLabels[$history->to_status] ?? ucfirst(str_replace('_', ' ', $history->to_status)) }}
                                 </span>
                                 <span class="text-3xs text-slate-400 whitespace-nowrap">

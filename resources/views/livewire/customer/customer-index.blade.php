@@ -73,17 +73,17 @@
                 <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
                     @foreach($customers as $customer)
                         <tr class="hover:bg-slate-50/70 transition-colors">
-                            <td class="py-3 px-5">
-                                <a href="{{ route('customers.show', $customer->id) }}" class="font-semibold text-slate-900 hover:text-primary-600 block">
+                            <td class="py-3 px-5 max-w-[220px] xl:max-w-xs">
+                                <a href="{{ route('customers.show', $customer->id) }}" class="font-semibold text-slate-900 hover:text-primary-600 truncate block" title="{{ $customer->name }}">
                                     {{ $customer->name }}
                                 </a>
                                 @if($customer->email)
-                                    <span class="text-3xs text-slate-400 block">{{ $customer->email }}</span>
+                                    <span class="text-3xs text-slate-400 truncate block" title="{{ $customer->email }}">{{ $customer->email }}</span>
                                 @endif
                             </td>
                             <td class="py-3 px-5 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
-                                    <span class="font-mono text-xs text-slate-800">{{ $customer->phone }}</span>
+                                    <span class="text-xs text-slate-800">{{ $customer->phone }}</span>
                                     <a
                                         href="https://wa.me/{{ $customer->formatted_phone }}"
                                         target="_blank"
@@ -142,7 +142,7 @@
                                 {{ $customer->name }}
                             </a>
                             <div class="flex items-center space-x-2 mt-0.5">
-                                <span class="font-mono text-2xs text-slate-600">{{ $customer->phone }}</span>
+                                <span class="text-2xs text-slate-600">{{ $customer->phone }}</span>
                                 <a
                                     href="https://wa.me/{{ $customer->formatted_phone }}"
                                     target="_blank"

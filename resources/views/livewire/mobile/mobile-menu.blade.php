@@ -17,8 +17,10 @@
                     <div class="flex items-center space-x-1.5 mt-1 text-2xs text-slate-600">
                         <i data-lucide="store" class="w-3.5 h-3.5 text-primary-600 shrink-0"></i>
                         <span class="font-medium truncate">{{ $store->name }}</span>
-                        <span class="text-slate-300">•</span>
-                        <span class="text-emerald-600 font-semibold">Paket {{ ucfirst($store->plan ?? 'Starter') }}</span>
+                        @if($role !== 'technician')
+                            <span class="text-slate-300">•</span>
+                            <span class="text-emerald-600 font-semibold">Paket {{ ucfirst($store->plan ?? 'Starter') }}</span>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -48,7 +50,9 @@
                     </div>
                     <div class="min-w-0">
                         <p class="text-sm font-semibold text-slate-800">Orderan Servis</p>
-                        <p class="text-2xs text-slate-500">Antrean masuk, proses, & siap ambil</p>
+                        <p class="text-2xs text-slate-500">
+                            {{ $role === 'technician' ? 'Daftar unit servis yang ditugaskan kepada Anda' : 'Antrean masuk, proses, & siap ambil' }}
+                        </p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -75,19 +79,21 @@
                 <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
             </a>
 
-            <!-- Pelanggan -->
-            <a href="{{ route('customers.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="users" class="w-5 h-5"></i>
+            @if($role !== 'technician')
+                <!-- Pelanggan -->
+                <a href="{{ route('customers.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-slate-800">Pelanggan</p>
+                            <p class="text-2xs text-slate-500">Database pelanggan & riwayat servis</p>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800">Pelanggan</p>
-                        <p class="text-2xs text-slate-500">Database pelanggan & riwayat servis</p>
-                    </div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-            </a>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                </a>
+            @endif
 
             @if($role === 'owner')
                 <!-- Teknisi & Komisi -->
@@ -122,7 +128,7 @@
                     </div>
                     <div class="min-w-0">
                         <p class="text-sm font-semibold text-slate-800">Produk & Sparepart</p>
-                        <p class="text-2xs text-slate-500">LCD, baterai, IC, aksesoris, & barcode</p>
+                        <p class="text-2xs text-slate-500">LCD, baterai, IC, aksesoris, & stok</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -135,19 +141,21 @@
                 </div>
             </a>
 
-            <!-- Supplier & Pembelian -->
-            <a href="{{ route('suppliers.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="truck" class="w-5 h-5"></i>
+            @if($role !== 'technician')
+                <!-- Supplier & Pembelian -->
+                <a href="{{ route('suppliers.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="truck" class="w-5 h-5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-slate-800">Supplier & Pembelian</p>
+                            <p class="text-2xs text-slate-500">Daftar pemasok & riwayat restock</p>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800">Supplier & Pembelian</p>
-                        <p class="text-2xs text-slate-500">Daftar pemasok & riwayat restock</p>
-                    </div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-            </a>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                </a>
+            @endif
         </div>
     </div>
 
@@ -190,58 +198,60 @@
         </div>
     @endif
 
-    <!-- Section 4: Pengaturan & Sistem -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pengaturan & Bantuan</span>
-            <span class="text-3xs text-slate-400 font-medium">Sistem</span>
-        </div>
-        <div class="divide-y divide-slate-100">
-            <!-- Pengingat & Notifikasi -->
-            <a href="{{ route('notifications.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="bell" class="w-5 h-5"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800">Notifikasi & Pengingat</p>
-                        <p class="text-2xs text-slate-500">Unit belum diambil & sparepart kritis</p>
-                    </div>
-                </div>
-                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-            </a>
-
-            @if($role === 'owner')
-                <!-- Pengaturan Toko -->
-                <a href="{{ route('settings.store') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+    @if($role !== 'technician')
+        <!-- Section 4: Pengaturan & Sistem -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pengaturan & Bantuan</span>
+                <span class="text-3xs text-slate-400 font-medium">Sistem</span>
+            </div>
+            <div class="divide-y divide-slate-100">
+                <!-- Pengingat & Notifikasi -->
+                <a href="{{ route('notifications.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
                     <div class="flex items-center space-x-3 min-w-0">
-                        <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                            <i data-lucide="settings" class="w-5 h-5"></i>
+                        <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-sm font-semibold text-slate-800">Pengaturan Toko</p>
-                            <p class="text-2xs text-slate-500">Alamat nota, printer thermal, & jam kerja</p>
+                            <p class="text-sm font-semibold text-slate-800">Notifikasi & Pengingat</p>
+                            <p class="text-2xs text-slate-500">Unit belum diambil & sparepart kritis</p>
                         </div>
                     </div>
                     <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
                 </a>
 
-                <!-- Paket Langganan -->
-                <a href="{{ route('subscriptions.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                    <div class="flex items-center space-x-3 min-w-0">
-                        <div class="w-9 h-9 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0">
-                            <i data-lucide="sparkle" class="w-5 h-5"></i>
+                @if($role === 'owner')
+                    <!-- Pengaturan Toko -->
+                    <a href="{{ route('settings.store') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                                <i data-lucide="settings" class="w-5 h-5"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-800">Pengaturan Toko</p>
+                                <p class="text-2xs text-slate-500">Alamat nota, printer thermal, & jam kerja</p>
+                            </div>
                         </div>
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold text-slate-800">Paket Langganan</p>
-                            <p class="text-2xs text-slate-500">Status kuota transaksi & upgrade paket</p>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                    </a>
+
+                    <!-- Paket Langganan -->
+                    <a href="{{ route('subscriptions.index') }}" class="flex items-center justify-between p-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <div class="w-9 h-9 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0">
+                                <i data-lucide="sparkle" class="w-5 h-5"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-800">Paket Langganan</p>
+                                <p class="text-2xs text-slate-500">Status kuota transaksi & upgrade paket</p>
+                            </div>
                         </div>
-                    </div>
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-                </a>
-            @endif
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                    </a>
+                @endif
+            </div>
         </div>
-    </div>
+    @endif
 
     <!-- Tombol Keluar Aplikasi (Logout) -->
     <div class="pt-2">

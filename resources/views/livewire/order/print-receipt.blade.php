@@ -6,9 +6,10 @@
     $trackingUrl = Route::has('tracking.show')
         ? route('tracking.show', $order->order_number)
         : url('/track/' . $order->order_number);
-    $warrantyDays = $order->warranty_ends_at
-        ? $order->warranty_ends_at->diffInDays($order->completed_at ?? now())
-        : ($order->warranty_days ?? 30);
+    $storeDefaultWarranty = (int) ($order->store?->getSetting('default_warranty_days', 30) ?? 30);
+    $warrantyDays = ($order->status === 'picked_up' && $order->warranty_ends_at)
+        ? (int) max(1, round($order->warranty_ends_at->diffInDays($order->picked_up_at ?? now())))
+        : $storeDefaultWarranty;
 
     $conditionLabels = [
         'screen_condition' => 'Kaca Layar',

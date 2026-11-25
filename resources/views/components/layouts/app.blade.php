@@ -2,8 +2,14 @@
     'title' => null,
     'header' => null,
     'breadcrumbs' => [],
-    'role' => 'owner', // super_admin, owner, admin, technician
+    'role' => null, // super_admin, owner, admin, technician
 ])
+
+@php
+    $tenantContext = app(\App\Services\TenantContext::class);
+    $currentRole = $role ?? ($activeRole ?? $tenantContext->getRole() ?? 'owner');
+    $currentStore = $activeStore ?? $tenantContext->getStore();
+@endphp
 
 <x-layouts.base :title="$title ? $title . ' — SEMAPON' : 'SEMAPON — Sistem Manajemen Servis HP'">
     <div
@@ -59,7 +65,7 @@
 
             <!-- Drawer Navigation -->
             <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-4 space-y-1">
-                @include('components.layouts.partials.navigation-links', ['isMobile' => true, 'role' => $role])
+                @include('components.layouts.partials.navigation-links', ['isMobile' => true, 'role' => $currentRole])
             </div>
 
             <!-- Drawer Footer -->
@@ -70,7 +76,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-semibold text-slate-800 truncate">{{ auth()->user()->name ?? 'User SEMAPON' }}</p>
-                        <p class="text-2xs text-slate-500 capitalize">{{ $role }}</p>
+                        <p class="text-2xs text-slate-500 capitalize">{{ $currentRole }}</p>
                     </div>
                 </div>
                 <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
@@ -101,7 +107,7 @@
 
             <!-- Sidebar Navigation Links -->
             <div class="flex-1 overflow-y-auto no-scrollbar px-4 py-5 space-y-1">
-                @include('components.layouts.partials.navigation-links', ['isMobile' => false, 'role' => $role])
+                @include('components.layouts.partials.navigation-links', ['isMobile' => false, 'role' => $currentRole])
             </div>
 
             <!-- Sidebar Footer / Store Switcher & Account -->
@@ -111,8 +117,12 @@
                         <i data-lucide="store" class="w-4 h-4"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-slate-800 truncate">{{ $activeStore->name ?? 'Toko Anda' }}</p>
-                        <p class="text-2xs text-emerald-600 font-medium">Paket {{ ucfirst($activeStore->plan ?? 'Starter') }}</p>
+                        <p class="text-xs font-semibold text-slate-800 truncate">{{ $currentStore->name ?? 'Toko Anda' }}</p>
+                        @if($currentRole === 'technician')
+                            <p class="text-2xs text-slate-500 font-medium">Akun Teknisi</p>
+                        @else
+                            <p class="text-2xs text-emerald-600 font-medium">Paket {{ ucfirst($currentStore->plan ?? 'Starter') }}</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -158,65 +168,67 @@
 
                 <!-- Right Header Actions -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <!-- Notifications Dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button
-                            type="button"
-                            @click="open = !open"
-                            @click.outside="open = false"
-                            class="relative p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
-                            aria-label="Notifikasi"
-                        >
-                            <i data-lucide="bell" class="w-5 h-5"></i>
-                            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
-                        </button>
+                    @if($currentRole !== 'technician')
+                        <!-- Notifications Dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button
+                                type="button"
+                                @click="open = !open"
+                                @click.outside="open = false"
+                                class="relative p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                                aria-label="Notifikasi"
+                            >
+                                <i data-lucide="bell" class="w-5 h-5"></i>
+                                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+                            </button>
 
-                        <div
-                            x-show="open"
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="transform opacity-0 scale-95"
-                            x-transition:enter-end="transform opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="transform opacity-100 scale-100"
-                            x-transition:leave-end="transform opacity-0 scale-95"
-                            class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50"
-                        >
-                            <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                                <h4 class="text-xs font-semibold text-slate-800">Notifikasi & Pengingat</h4>
-                                <span class="text-2xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">3 Baru</span>
-                            </div>
-                            <div class="py-1 divide-y divide-slate-50 max-h-72 overflow-y-auto">
-                                <a href="#" class="block px-4 py-3 hover:bg-slate-50 transition-colors">
-                                    <div class="flex items-start space-x-2.5">
-                                        <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50"
+                            >
+                                <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                                    <h4 class="text-xs font-semibold text-slate-800">Notifikasi & Pengingat</h4>
+                                    <span class="text-2xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">3 Baru</span>
+                                </div>
+                                <div class="py-1 divide-y divide-slate-50 max-h-72 overflow-y-auto">
+                                    <a href="#" class="block px-4 py-3 hover:bg-slate-50 transition-colors">
+                                        <div class="flex items-start space-x-2.5">
+                                            <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-medium text-slate-800 leading-snug">Servis selesai belum diambil</p>
+                                                <p class="text-2xs text-slate-400 mt-0.5">iPhone 11 — Bpk. Anton (3 hari lalu)</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-xs font-medium text-slate-800 leading-snug">Servis selesai belum diambil</p>
-                                            <p class="text-2xs text-slate-400 mt-0.5">iPhone 11 — Bpk. Anton (3 hari lalu)</p>
+                                    </a>
+                                    <a href="#" class="block px-4 py-3 hover:bg-slate-50 transition-colors">
+                                        <div class="flex items-start space-x-2.5">
+                                            <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5">
+                                                <i data-lucide="package-x" class="w-3.5 h-3.5"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-medium text-slate-800 leading-snug">Stok LCD menipis</p>
+                                                <p class="text-2xs text-slate-400 mt-0.5">LCD Redmi Note 10 sisa 1 unit</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </a>
-                                <a href="#" class="block px-4 py-3 hover:bg-slate-50 transition-colors">
-                                    <div class="flex items-start space-x-2.5">
-                                        <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5">
-                                            <i data-lucide="package-x" class="w-3.5 h-3.5"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs font-medium text-slate-800 leading-snug">Stok LCD menipis</p>
-                                            <p class="text-2xs text-slate-400 mt-0.5">LCD Redmi Note 10 sisa 1 unit</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="px-4 py-2 border-t border-slate-100 text-center">
-                                <a href="{{ Route::has('notifications.index') ? route('notifications.index') : '#' }}" class="text-2xs font-semibold text-primary-600 hover:text-primary-700">
-                                    Buka Semua Pengingat & Notifikasi →
-                                </a>
+                                    </a>
+                                </div>
+                                <div class="px-4 py-2 border-t border-slate-100 text-center">
+                                    <a href="{{ Route::has('notifications.index') ? route('notifications.index') : '#' }}" class="text-2xs font-semibold text-primary-600 hover:text-primary-700">
+                                        Buka Semua Pengingat & Notifikasi →
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
 
                     <!-- User Profile Dropdown -->
                     <div class="relative" x-data="{ open: false }">
@@ -254,10 +266,12 @@
                                 <i data-lucide="user" class="w-4 h-4 mr-2 text-slate-400"></i>
                                 Profil & Keamanan
                             </a>
-                            <a href="{{ Route::has('settings.store') ? route('settings.store') : '#' }}" class="flex items-center px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors">
-                                <i data-lucide="settings" class="w-4 h-4 mr-2 text-slate-400"></i>
-                                Pengaturan Toko
-                            </a>
+                            @if($currentRole === 'owner')
+                                <a href="{{ Route::has('settings.store') ? route('settings.store') : '#' }}" class="flex items-center px-4 py-2 text-xs text-slate-600 hover:bg-slate-50 transition-colors">
+                                    <i data-lucide="settings" class="w-4 h-4 mr-2 text-slate-400"></i>
+                                    Pengaturan Toko
+                                </a>
+                            @endif
                             <div class="my-1 border-t border-slate-100"></div>
                             <form method="POST" action="{{ Route::has('logout') ? route('logout') : '#' }}">
                                 @csrf
@@ -286,7 +300,7 @@
 
         <!-- Mobile Bottom Navigation Bar (Sticky) -->
         <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-30 px-2 py-1 shadow-lg">
-            <div class="grid grid-cols-4 items-center justify-around text-center">
+            <div class="grid {{ $currentRole === 'technician' ? 'grid-cols-3' : 'grid-cols-4' }} items-center justify-around text-center">
                 <!-- 1. Home / Dashboard -->
                 <a href="{{ Route::has('dashboard') ? route('dashboard') : url('/') }}" class="flex flex-col items-center py-1 {{ request()->routeIs('dashboard') ? 'text-primary-600 font-semibold' : 'text-slate-600 hover:text-primary-600' }}">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
@@ -299,11 +313,13 @@
                     <span class="text-3xs font-medium mt-1">Order</span>
                 </a>
 
-                <!-- 3. Pelanggan -->
-                <a href="{{ Route::has('customers.index') ? route('customers.index') : '#' }}" class="flex flex-col items-center py-1 {{ request()->routeIs('customers.*') ? 'text-primary-600 font-semibold' : 'text-slate-600 hover:text-primary-600' }}">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                    <span class="text-3xs font-medium mt-1">Pelanggan</span>
-                </a>
+                @if($currentRole !== 'technician')
+                    <!-- 3. Pelanggan (Owner & Admin Only) -->
+                    <a href="{{ Route::has('customers.index') ? route('customers.index') : '#' }}" class="flex flex-col items-center py-1 {{ request()->routeIs('customers.*') ? 'text-primary-600 font-semibold' : 'text-slate-600 hover:text-primary-600' }}">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                        <span class="text-3xs font-medium mt-1">Pelanggan</span>
+                    </a>
+                @endif
 
                 <!-- 4. Halaman Menu / Lainnya -->
                 <a

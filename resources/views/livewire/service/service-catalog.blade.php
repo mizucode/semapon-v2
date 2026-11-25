@@ -5,26 +5,28 @@
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Katalog Jasa Servis</h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">Daftar tarif ongkos kerja, estimasi pengerjaan, dan garansi standar layanan toko.</p>
         </div>
-        <div class="flex items-center space-x-2">
-            <x-button
-                type="button"
-                variant="outline"
-                size="sm"
-                icon="folder-plus"
-                @click="$wire.showCategoryModal = true"
-            >
-                Kelola Kategori
-            </x-button>
-            <x-button
-                type="button"
-                variant="primary"
-                size="sm"
-                icon="plus"
-                wire:click="openCreateServiceModal"
-            >
-                Tambah Layanan
-            </x-button>
-        </div>
+        @if(!$isTechnician)
+            <div class="flex items-center space-x-2">
+                <x-button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon="folder-plus"
+                    @click="$wire.showCategoryModal = true"
+                >
+                    Kelola Kategori
+                </x-button>
+                <x-button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    icon="plus"
+                    wire:click="openCreateServiceModal"
+                >
+                    Tambah Layanan
+                </x-button>
+            </div>
+        @endif
     </div>
 
     <!-- Filters & Search -->
@@ -59,9 +61,9 @@
         <x-empty-state
             icon="sparkles"
             title="Belum ada layanan servis"
-            description="Tambahkan jenis-jenis layanan jasa servis HP yang Anda sediakan di konter Anda."
-            actionLabel="Tambah Layanan Pertama"
-            actionClick="$wire.openCreateServiceModal()"
+            :description="$isTechnician ? 'Belum ada daftar tarif layanan servis yang tersedia saat ini.' : 'Tambahkan jenis-jenis layanan jasa servis HP yang Anda sediakan di konter Anda.'"
+            :actionLabel="$isTechnician ? null : 'Tambah Layanan Pertama'"
+            :actionClick="$isTechnician ? null : '$wire.openCreateServiceModal()'"
         />
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -95,22 +97,24 @@
                         </div>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <button
-                            type="button"
-                            wire:click="toggleServiceStatus('{{ $service->id }}')"
-                            class="text-xs font-medium {{ $service->is_active ? 'text-amber-600 hover:text-amber-800' : 'text-emerald-600 hover:text-emerald-800' }}"
-                        >
-                            {{ $service->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                        </button>
-                        <button
-                            type="button"
-                            wire:click="editService('{{ $service->id }}')"
-                            class="px-3 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-                        >
-                            Edit
-                        </button>
-                    </div>
+                    @if(!$isTechnician)
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <button
+                                type="button"
+                                wire:click="toggleServiceStatus('{{ $service->id }}')"
+                                class="text-xs font-medium {{ $service->is_active ? 'text-amber-600 hover:text-amber-800' : 'text-emerald-600 hover:text-emerald-800' }}"
+                            >
+                                {{ $service->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                            </button>
+                            <button
+                                type="button"
+                                wire:click="editService('{{ $service->id }}')"
+                                class="px-3 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                            >
+                                Edit
+                            </button>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -120,6 +124,7 @@
         </div>
     @endif
 
+    @if(!$isTechnician)
     <!-- Add/Edit Service Modal -->
     <div
         x-data
@@ -272,5 +277,6 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 

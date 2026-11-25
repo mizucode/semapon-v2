@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\InventoryService;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -132,6 +133,11 @@ class ServiceOrder extends Model
         return $this->hasMany(ServiceOrderItem::class, 'service_order_id');
     }
 
+    public function parts(): HasMany
+    {
+        return $this->hasMany(ServiceOrderPart::class, 'service_order_id');
+    }
+
     public function diagnoses(): HasMany
     {
         return $this->hasMany(ServiceOrderDiagnosis::class, 'service_order_id');
@@ -193,6 +199,28 @@ class ServiceOrder extends Model
         }
 
         $this->save();
+
+        if (in_array($newStatus, ['cancelled', 'unrepairable'], true) && ! in_array($oldStatus, ['cancelled', 'unrepairable'], true)) {
+            $inventoryService = app(InventoryService::class);
+            foreach ($this->parts()->get() as $part) {
+                $inventoryService->returnPartFromOrder($part, $userId ?: auth()->id());
+            }
+        }
+
+        if ($newStatus === 'completed' && $oldStatus !== 'completed' && $this->technician_id) {
+            $techProfile = TechnicianProfile::withoutGlobalScopes()
+                ->where('store_id', $this->store_id)
+                ->where('user_id', $this->technician_id)
+                ->first();
+
+            if ($techProfile) {
+                $commission = $techProfile->calculateOrderCommission($this);
+                $techProfile->increment('total_jobs_completed');
+                if ($commission > 0) {
+                    $techProfile->increment('total_commission_earned', $commission);
+                }
+            }
+        }
 
         $this->histories()->create([
             'store_id' => $this->store_id,

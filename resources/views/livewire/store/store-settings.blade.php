@@ -253,7 +253,7 @@
                 <div class="space-y-3 text-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-slate-500">Slug Toko:</span>
-                        <span class="font-mono font-medium text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-3xs">{{ $store->slug ?? '-' }}</span>
+                        <span class="font-medium text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md text-3xs">{{ $store->slug ?? '-' }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-slate-500">Paket Langganan:</span>
@@ -265,7 +265,7 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-slate-500">Store ULID:</span>
-                        <span class="font-mono text-3xs text-slate-600 truncate max-w-[140px]">{{ $store->id ?? '-' }}</span>
+                        <span class="text-3xs text-slate-600 truncate max-w-[140px]">{{ $store->id ?? '-' }}</span>
                     </div>
                 </div>
             </x-card>

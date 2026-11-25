@@ -42,9 +42,9 @@ class ProductIndex extends Component
 
     public string $type = 'sparepart';
 
-    public float $buy_price = 0;
+    public $buy_price = 0;
 
-    public float $sell_price = 0;
+    public $sell_price = 0;
 
     public int $stock = 0;
 
@@ -73,8 +73,8 @@ class ProductIndex extends Component
             'sku' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:100'],
             'type' => ['required', 'in:sparepart,accessory,unit,other'],
-            'buy_price' => ['required', 'numeric', 'min:0'],
-            'sell_price' => ['required', 'numeric', 'min:0'],
+            'buy_price' => ['nullable', 'numeric', 'min:0'],
+            'sell_price' => ['nullable', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'min_stock' => ['required', 'integer', 'min:0'],
             'unit' => ['required', 'string', 'max:20'],
@@ -104,6 +104,8 @@ class ProductIndex extends Component
 
     public function openCreateModal(): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $this->reset([
             'name', 'category_id', 'sku', 'barcode', 'type',
             'buy_price', 'sell_price', 'stock', 'min_stock', 'unit',
@@ -120,6 +122,8 @@ class ProductIndex extends Component
 
     public function openEditModal(string $productId): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $product = Product::findOrFail($productId);
         $this->editingProductId = $product->id;
         $this->name = $product->name;
@@ -141,9 +145,14 @@ class ProductIndex extends Component
 
     public function saveProduct(TenantContext $tenantContext, InventoryService $inventoryService): void
     {
+        abort_if($tenantContext->isTechnician(), 403);
+
         $this->validate();
 
         $store = $tenantContext->getStore();
+
+        $buyPrice = (float) ($this->buy_price ?: 0);
+        $sellPrice = (float) ($this->sell_price ?: 0);
 
         if ($this->isEditing && $this->editingProductId) {
             $product = Product::findOrFail($this->editingProductId);
@@ -153,8 +162,8 @@ class ProductIndex extends Component
                 'sku' => $this->sku ?: null,
                 'barcode' => $this->barcode ?: null,
                 'type' => $this->type,
-                'buy_price' => $this->buy_price,
-                'sell_price' => $this->sell_price,
+                'buy_price' => $buyPrice,
+                'sell_price' => $sellPrice,
                 'min_stock' => $this->min_stock,
                 'unit' => $this->unit,
                 'is_active' => $this->is_active,
@@ -173,8 +182,8 @@ class ProductIndex extends Component
                 'sku' => $this->sku ?: null,
                 'barcode' => $this->barcode ?: null,
                 'type' => $this->type,
-                'buy_price' => $this->buy_price,
-                'sell_price' => $this->sell_price,
+                'buy_price' => $buyPrice,
+                'sell_price' => $sellPrice,
                 'stock' => 0,
                 'min_stock' => $this->min_stock,
                 'unit' => $this->unit,
@@ -186,7 +195,7 @@ class ProductIndex extends Component
                 $inventoryService->recordStockIn(
                     $product,
                     $this->stock,
-                    $this->buy_price,
+                    $buyPrice,
                     Auth::id(),
                     'Stok awal saat pendaftaran produk'
                 );
@@ -204,6 +213,8 @@ class ProductIndex extends Component
 
     public function openStockAdjustModal(string $productId): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $this->selectedProductForStock = Product::findOrFail($productId);
         $this->adjust_type = 'in';
         $this->adjust_quantity = 1;
@@ -214,6 +225,8 @@ class ProductIndex extends Component
 
     public function submitStockAdjustment(InventoryService $inventoryService): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         $this->validate([
             'adjust_quantity' => ['required', 'integer', 'min:1'],
             'adjust_type' => ['required', 'in:in,out,adjustment'],
@@ -259,8 +272,9 @@ class ProductIndex extends Component
         }
     }
 
-    public function render()
+    public function render(TenantContext $tenantContext)
     {
+        $isTechnician = $tenantContext->isTechnician();
         $query = Product::with('category');
 
         if (! empty($this->search)) {
@@ -295,6 +309,7 @@ class ProductIndex extends Component
         ];
 
         return view('livewire.inventory.product-index', [
+            'isTechnician' => $isTechnician,
             'products' => $products,
             'categories' => $categories,
             'stats' => $stats,

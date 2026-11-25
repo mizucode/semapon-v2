@@ -3,6 +3,7 @@
 namespace App\Livewire\Order;
 
 use App\Models\ServiceOrder;
+use App\Services\TenantContext;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -43,6 +44,10 @@ class PrintReceipt extends Component
             'technician',
             'items',
         ])->findOrFail($id);
+
+        if (app(TenantContext::class)->isTechnician() && $this->order->technician_id !== auth()->id()) {
+            abort(403, 'Order servis ini tidak ditugaskan kepada Anda.');
+        }
     }
 
     public function render()

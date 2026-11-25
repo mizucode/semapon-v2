@@ -6,6 +6,7 @@ use App\Livewire\Order\OrderDetail;
 use App\Livewire\Order\OrderIndex;
 use App\Models\Customer;
 use App\Models\CustomerDevice;
+use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\ServiceOrder;
@@ -69,13 +70,17 @@ test('user can view orders index and see stats', function () {
     $response->assertSee('Order Servis');
 });
 
-test('user can search orders on index', function () {
+test('user can search and filter orders by single status on index', function () {
     $this->actingAs($this->ownerUser);
     session(['active_store_id' => $this->store->id]);
 
     Livewire::test(OrderIndex::class)
         ->set('search', 'Poco')
-        ->assertSee('Order Servis');
+        ->assertSee('Order Servis')
+        ->set('statusFilter', 'received')
+        ->assertSet('statusFilter', 'received')
+        ->assertDontSee('Antrean & Pengerjaan')
+        ->assertSee('Menunggu Diagnosa');
 });
 
 test('user can create a service order via intake form', function () {
@@ -186,6 +191,10 @@ test('technician can dynamically update order status to unrepairable with custom
 
     Livewire::test(OrderDetail::class, ['id' => $order->id])
         ->call('openUpdateStatusModal', 'unrepairable')
+        ->assertSee('Perbarui Status')
+        ->assertDontSee('Perbarui Status & Log Aktivitas')
+        ->assertDontSee('Pilih status pengerjaan baru dan sertakan keterangan teknisi.')
+        ->assertDontSee('Catatan ini akan tersimpan permanen di riwayat aktivitas order dan dapat dilihat oleh tim.')
         ->set('new_status', 'unrepairable')
         ->set('status_notes', 'IC Power & CPU short parah, tidak bisa diperbaiki.')
         ->call('updateStatusWithNotes')
@@ -273,7 +282,12 @@ test('user can add service items, record payment, and complete order', function 
         ->assertSee('100.000');
 });
 
-test('user can view printable receipt for order', function () {
+test('user can view printable receipt for order and respect store default warranty days', function () {
+    $settings = $this->store->settings ?? [];
+    $settings['default_warranty_days'] = 3;
+    $this->store->settings = $settings;
+    $this->store->save();
+
     $order = ServiceOrder::create([
         'store_id' => $this->store->id,
         'customer_id' => $this->customer->id,
@@ -292,6 +306,7 @@ test('user can view printable receipt for order', function () {
     $response->assertStatus(200);
     $response->assertSee('#ORD-202611-0003');
     $response->assertSee('Budi Santoso');
+    $response->assertSee('GARANSI TOKO: 3 HARI');
 });
 
 test('service order data is isolated between different tenants', function () {
@@ -542,6 +557,53 @@ test('order detail displays physical condition photos section only when photos e
         ->assertSee('2 Foto');
 });
 
+test('order detail displays physical condition checklist in stacked vertical layout matching device details', function () {
+    $this->actingAs($this->ownerUser);
+    session(['active_store_id' => $this->store->id]);
+
+    // Test indexed array physical condition
+    $orderIndexed = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar blank',
+        'created_by' => $this->ownerUser->id,
+        'physical_condition' => ['Lecet bezel samping', 'Kaca depan retak seribu'],
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $orderIndexed->id])
+        ->assertSee('Kondisi Fisik Awal')
+        ->assertSee('Kondisi 1')
+        ->assertSee('Lecet bezel samping')
+        ->assertSee('Kondisi 2')
+        ->assertSee('Kaca depan retak seribu');
+
+    // Test associative array physical condition
+    $orderAssoc = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'received',
+        'complaints' => 'Layar blank',
+        'created_by' => $this->ownerUser->id,
+        'physical_condition' => [
+            'screen_condition' => 'Normal Mulus',
+            'lcd_condition' => 'Pecah / Blank',
+        ],
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $orderAssoc->id])
+        ->assertSee('Merek / Brand')
+        ->assertSee('Model / Tipe HP')
+        ->assertDontSee('Tipe Gadget')
+        ->assertSee('Kondisi Fisik Awal')
+        ->assertSee('Kaca Layar')
+        ->assertSee('Normal Mulus')
+        ->assertSee('Tampilan LCD')
+        ->assertSee('Pecah / Blank');
+});
+
 test('user can access edit order page and update order data', function () {
     $this->actingAs($this->ownerUser);
     session(['active_store_id' => $this->store->id]);
@@ -655,4 +717,131 @@ test('order detail hides cost summary footer when no items or services added', f
         ->assertSee('Catat Pembayaran')
         ->assertSee('Pembayaran Diterima:')
         ->assertSee('Rp. 50.000');
+});
+
+test('tambah biaya combines catalog service and sparepart into single row, deducts stock, and restores stock on removal', function () {
+    $this->actingAs($this->ownerUser);
+
+    $service = Service::create([
+        'store_id' => $this->store->id,
+        'name' => 'Jasa Ganti Baterai',
+        'price' => 50000,
+        'estimated_duration_minutes' => 45,
+        'warranty_days' => 14,
+        'is_active' => true,
+    ]);
+
+    $product = Product::create([
+        'store_id' => $this->store->id,
+        'name' => 'Baterai Original Redmi Note 12',
+        'sku' => 'BAT-RN12-ORI',
+        'type' => 'sparepart',
+        'buy_price' => 120000,
+        'sell_price' => 200000,
+        'stock' => 5,
+        'min_stock' => 2,
+        'unit' => 'pcs',
+        'is_active' => true,
+    ]);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'in_progress',
+        'complaints' => 'Baterai kembung',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    $component = Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->call('openAddItemModal')
+        ->call('selectCatalogService', $service->id)
+        ->assertSet('item_name', 'Jasa Ganti Baterai')
+        ->assertSet('item_price', 50000.0)
+        ->call('selectSparepart', $product->id)
+        ->assertSet('item_name', 'Jasa Ganti Baterai (Baterai Original Redmi Note 12)')
+        ->assertSet('item_price', 250000.0)
+        ->call('addItem')
+        ->assertHasNoErrors();
+
+    $product->refresh();
+    $order->refresh();
+
+    expect($product->stock)->toBe(4);
+    expect($order->items)->toHaveCount(1);
+    expect((float) $order->total_cost)->toBe(250000.0);
+
+    $createdItem = $order->items()->first();
+    expect($createdItem->name)->toBe('Jasa Ganti Baterai (Baterai Original Redmi Note 12)');
+    expect($createdItem->service_order_part_id)->not->toBeNull();
+
+    $this->assertDatabaseHas('stock_movements', [
+        'product_id' => $product->id,
+        'type' => 'service_usage',
+        'reference_id' => $order->id,
+        'stock_before' => 5,
+        'stock_after' => 4,
+    ]);
+
+    // Removing the item automatically restores sparepart stock back to 5
+    $component->call('removeItem', $createdItem->id)
+        ->assertHasNoErrors();
+
+    $product->refresh();
+    $order->refresh();
+
+    expect($product->stock)->toBe(5);
+    expect($order->items)->toHaveCount(0);
+    expect((float) $order->total_cost)->toBe(0.0);
+
+    $this->assertDatabaseHas('stock_movements', [
+        'product_id' => $product->id,
+        'type' => 'service_return',
+        'reference_id' => $order->id,
+        'stock_before' => 4,
+        'stock_after' => 5,
+    ]);
+});
+
+test('cancelling an order automatically returns used spareparts back to inventory stock', function () {
+    $this->actingAs($this->ownerUser);
+
+    $product = Product::create([
+        'store_id' => $this->store->id,
+        'name' => 'LCD OLED Poco X5',
+        'type' => 'sparepart',
+        'buy_price' => 300000,
+        'sell_price' => 450000,
+        'stock' => 3,
+        'min_stock' => 1,
+        'unit' => 'pcs',
+        'is_active' => true,
+    ]);
+
+    $order = ServiceOrder::create([
+        'store_id' => $this->store->id,
+        'customer_id' => $this->customer->id,
+        'customer_device_id' => $this->device->id,
+        'status' => 'in_progress',
+        'complaints' => 'Layar pecah',
+        'created_by' => $this->ownerUser->id,
+    ]);
+
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->call('openAddItemModal')
+        ->call('selectSparepart', $product->id)
+        ->call('addItem')
+        ->assertHasNoErrors();
+
+    expect($product->fresh()->stock)->toBe(2);
+
+    Livewire::test(OrderDetail::class, ['id' => $order->id])
+        ->call('openUpdateStatusModal', 'cancelled')
+        ->set('new_status', 'cancelled')
+        ->set('status_notes', 'Pelanggan batal servis')
+        ->call('updateStatusWithNotes')
+        ->assertHasNoErrors();
+
+    expect($product->fresh()->stock)->toBe(3);
+    expect($order->fresh()->status)->toBe('cancelled');
 });

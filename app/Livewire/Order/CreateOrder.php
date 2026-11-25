@@ -103,6 +103,8 @@ class CreateOrder extends Component
 
     public function mount(): void
     {
+        abort_if(app(TenantContext::class)->isTechnician(), 403);
+
         if (empty($this->estimated_completion_at)) {
             $this->estimated_completion_at = now()->addDays(2)->format('Y-m-d\TH:i');
         }

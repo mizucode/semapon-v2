@@ -181,3 +181,46 @@ test('owner can toggle technician status and reset password', function () {
     $techUser->refresh();
     expect(Hash::check('brand-new-pass123', $techUser->password))->toBeTrue();
 });
+
+test('owner can add a salaried employee technician without commission', function () {
+    $owner = User::factory()->create();
+    $store = Store::factory()->create([
+        'owner_id' => $owner->id,
+        'plan' => 'business',
+    ]);
+
+    StoreMembership::create([
+        'store_id' => $store->id,
+        'user_id' => $owner->id,
+        'role' => 'owner',
+        'status' => 'active',
+    ]);
+
+    $tenantContext = app(TenantContext::class);
+    $tenantContext->setStore($store);
+
+    Livewire::actingAs($owner)
+        ->test(TechnicianIndex::class)
+        ->call('openCreateModal')
+        ->set('name', 'Andi Karyawan')
+        ->set('email', 'andi.karyawan@teknisi.com')
+        ->set('phone', '081235556666')
+        ->set('password', 'password123')
+        ->set('specialization', 'Ganti LCD / Kaca')
+        ->set('employment_type', 'salary')
+        ->call('createTechnician')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast')
+        ->assertSee('Karyawan (Gaji)');
+
+    $user = User::where('email', 'andi.karyawan@teknisi.com')->first();
+    expect($user)->not->toBeNull();
+
+    $tech = TechnicianProfile::where('user_id', $user->id)->first();
+    expect($tech)->not->toBeNull();
+    expect($tech->isSalaried())->toBeTrue();
+    expect($tech->hasCommission())->toBeFalse();
+    expect($tech->commission_type)->toBe('salary');
+    expect((float) $tech->commission_rate)->toBe(0.0);
+    expect($tech->calculateCommission(250000))->toBe(0.0);
+});

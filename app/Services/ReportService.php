@@ -75,15 +75,21 @@ class ReportService
             $completed = (clone $orderQuery)->where('status', 'completed')->count();
             $totalLabor = (float) (clone $orderQuery)->where('status', 'completed')->sum('total_cost');
 
-            // Commission calculation based on tech rate
-            $commission = $tech->commission_rate > 0
-                ? ($totalLabor * ($tech->commission_rate / 100))
-                : 0;
+            // Commission calculation based on tech compensation scheme
+            $commission = match ($tech->commission_type) {
+                'salary' => 0.0,
+                'fixed' => $completed * (float) $tech->commission_rate,
+                'percentage', 'profit_split' => $tech->commission_rate > 0
+                    ? ($totalLabor * ((float) $tech->commission_rate / 100))
+                    : 0.0,
+                default => 0.0,
+            };
 
             $stats[] = [
                 'technician_id' => $tech->user_id,
                 'name' => $tech->user?->name ?? 'Teknisi',
                 'specialization' => $tech->specialization,
+                'commission_type' => $tech->commission_type,
                 'total_assigned' => $totalAssigned,
                 'completed' => $completed,
                 'total_revenue' => $totalLabor,
